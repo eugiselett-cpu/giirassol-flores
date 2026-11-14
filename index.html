@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff8e9"><title>Giirassol Flores | Catálogo</title>
+<style>
+:root{--cream:#fff9ef;--paper:#fff;--gold:#d4a83b;--yellow:#f5e6b8;--green:#687c52;--ink:#4d473b;--muted:#877d6b;--line:#eee3d0}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+header{text-align:center;padding:30px 16px 24px;background:linear-gradient(135deg,#fff2ca,#fffdf7);border-bottom:1px solid var(--line)}
+.brand{font:clamp(32px,5vw,48px) Georgia,serif;color:var(--green);margin:0}.tag{font:16px Georgia,serif;color:#77694f;margin:9px 0}.sub,.small{font-size:12px;color:var(--muted)}
+.top,.tabs,.wrap,.admin{max-width:1120px;margin-left:auto;margin-right:auto;padding-left:18px;padding-right:18px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;margin-bottom:14px}
+.btn,.tab{border:0;border-radius:10px;padding:11px 15px;background:var(--green);color:white;font-weight:700;cursor:pointer}
+.secondary{background:#f0e6cf;color:#5e543f}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.tab{background:#f0e8d8;color:#625840}.tab.active{background:var(--green);color:white}
+.wrap{padding-bottom:42px}.intro{font-size:13px;color:var(--muted);margin:8px 0 18px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.product{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.product img,.noimage{width:100%;height:190px;object-fit:contain;background:#fff;padding:8px}
+.noimage{display:flex;align-items:center;justify-content:center;background:#f7f1e4;color:#94896f;font-size:12px}
+.pbody{padding:11px;display:flex;flex-direction:column;gap:8px;flex:1}.pname{font-weight:700;font-size:14px}.price{font-size:12px;color:#81672e;min-height:14px}
+.add{margin-top:auto;border:0;border-radius:9px;background:var(--yellow);padding:10px;color:#51472e;font-weight:700;cursor:pointer}
+.cartbox{position:fixed;right:16px;bottom:16px;z-index:4}.carttoggle{border:0;border-radius:30px;padding:14px 18px;background:var(--green);color:white;font-weight:700;box-shadow:0 4px 16px #0003;cursor:pointer}
+.panel{display:none;position:fixed;z-index:5;right:14px;bottom:76px;width:min(430px,calc(100vw - 28px));max-height:78vh;overflow:auto;background:white;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 10px 35px #0003}.panel.open{display:block}
+.cartrow{display:grid;grid-template-columns:58px 1fr auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.cartrow img{width:58px;height:58px;object-fit:contain;background:#faf7f0;border-radius:8px}.qty{display:flex;align-items:center;gap:7px}.qty button{width:26px;height:26px;border:0;border-radius:50%;background:#f1eadb;cursor:pointer}
+.field{width:100%;padding:11px;border:1px solid #ddd3bd;border-radius:9px;margin:5px 0 10px;font:14px Arial,sans-serif}
+.total{font-weight:700;padding:12px 0}.notice{font-size:12px;line-height:1.5;color:var(--muted)}
+.adminbox{display:none;background:white;border:1px solid var(--line);border-radius:14px;padding:16px;margin:10px 0 18px}.adminbox.open{display:block}
+.adminrow{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px;margin:7px 0}.adminrow input{min-width:0;padding:9px;border:1px solid #ddd;border-radius:8px}
+.adminitem{padding:7px 0;border-bottom:1px solid #eee}.footer{text-align:center;padding:26px 16px;background:#f1eadb;color:#6a604d;font-size:13px;line-height:1.8}
+@media(max-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product img,.noimage{height:155px}.pbody{padding:9px}}
+</style></head><body>
+<header><h1 class="brand">🌻 Giirassol Flores</h1><p class="tag">Presentes feitos à mão, com carinho em cada detalhe.</p><div class="sub">Feito à mão • Feito com amor</div></header>
+<div class="top"><div><b>Nosso catálogo</b><div class="small">Escolha seus produtos e monte seu pedido.</div></div></div>
+<nav class="tabs" id="tabs"></nav>
+<main class="wrap"><p class="intro">Escolha seus favoritos e monte seu presente especial.</p><section class="grid" id="products"></section></main>
+<div class="cartbox"><button class="carttoggle" onclick="toggleCart()">🛒 Carrinho (<span id="count">0</span>)</button></div>
+<aside id="cart" class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Seu pedido</h3><button class="btn secondary" onclick="toggleCart()">Fechar</button></div>
+<div id="cartItems"></div><label>Seu nome</label><input id="customer" class="field" placeholder="Como podemos chamar você?">
+<label>Observações / personalização</label><textarea id="notes" class="field" rows="3" placeholder="Cores, mensagem do cartão, data desejada..."></textarea>
+<div class="total" id="total">Total dos itens com preço: R$ 0,00</div><p class="notice">Flores e flores especiais não têm preço exibido. O total considera somente adicionais e pelúcias com preço cadastrado; o valor final do buquê será confirmado pelo atendimento.</p>
+<button class="btn" style="width:100%" onclick="checkout()">Finalizar pedido pelo WhatsApp</button></aside>
+<footer class="footer"><b>Giirassol Flores</b><br>Olho d’água, Boa Hora – PI<br>Encomendas com 4 a 7 dias de antecedência.<br><span id="instaText"></span><br><span id="phoneText">WhatsApp a cadastrar</span></footer>
+<script>
+const initial = [{"id": 1, "name": "Lírio 1", "category": "Flores", "image": "images/1.jpeg", "price": ""}, {"id": 2, "name": "Lírio 2", "category": "Flores", "image": "images/2.jpeg", "price": ""}, {"id": 3, "name": "Lírio 3", "category": "Flores", "image": "images/3.jpeg", "price": ""}, {"id": 4, "name": "Lírio tamanho G", "category": "Flores", "image": "images/4.jpeg", "price": ""}, {"id": 5, "name": "Rosa espiral", "category": "Flores", "image": "images/5.jpeg", "price": ""}, {"id": 6, "name": "Rosa", "category": "Flores", "image": "images/6.jpeg", "price": ""}, {"id": 7, "name": "Tulipa", "category": "Flores", "image": "images/7.jpeg", "price": ""}, {"id": 8, "name": "Crisântemo", "category": "Flores", "image": "images/8.jpeg", "price": ""}, {"id": 9, "name": "Gérbera", "category": "Flores", "image": "images/9.jpeg", "price": ""}, {"id": 10, "name": "Lírio-aranha", "category": "Flores", "image": "images/10.jpeg", "price": ""}, {"id": 11, "name": "Papoula", "category": "Flores", "image": "images/11.jpeg", "price": ""}, {"id": 12, "name": "Astromélia", "category": "Flores", "image": "images/12.jpeg", "price": ""}, {"id": 13, "name": "Hibisco 1", "category": "Flores", "image": "images/13.jpeg", "price": ""}, {"id": 14, "name": "Hibisco 2", "category": "Flores", "image": "images/14.jpeg", "price": ""}, {"id": 15, "name": "Peônia 1", "category": "Flores", "image": "images/15.jpeg", "price": ""}, {"id": 16, "name": "Flor de Lótus", "category": "Flores", "image": "images/16.jpeg", "price": ""}, {"id": 17, "name": "Margaridas", "category": "Flores", "image": "images/17.jpeg", "price": ""}, {"id": 18, "name": "Campânula", "category": "Flores", "image": "images/18.jpeg", "price": ""}, {"id": 19, "name": "Narcisos", "category": "Flores", "image": "images/19.jpeg", "price": ""}, {"id": 20, "name": "Copo de leite", "category": "Flores", "image": "images/20.jpeg", "price": ""}, {"id": 21, "name": "Lavanda", "category": "Flores", "image": "images/21.jpeg", "price": ""}, {"id": 22, "name": "Cravo", "category": "Flores", "image": "images/22.jpeg", "price": ""}, {"id": 23, "name": "Girassol 1", "category": "Flores", "image": "images/23.jpeg", "price": ""}, {"id": 24, "name": "Girassol 2", "category": "Flores", "image": "images/24.jpeg", "price": ""}, {"id": 25, "name": "Flor de princesa/a sua escolha", "category": "Flores especiais", "image": "images/25.jpeg", "price": ""}, {"id": 26, "name": "Abelha", "category": "Flores especiais", "image": "images/26.jpeg", "price": ""}, {"id": 27, "name": "Tuli Coelho", "category": "Flores especiais", "image": "images/27.jpeg", "price": ""}, {"id": 28, "name": "Tuli Spiderman", "category": "Flores especiais", "image": "images/28.jpeg", "price": ""}, {"id": 29, "name": "Tuli Snoopy", "category": "Flores especiais", "image": "images/29.jpeg", "price": ""}, {"id": 30, "name": "Tuli Hello Kitty", "category": "Flores especiais", "image": "images/30.jpeg", "price": ""}, {"id": 31, "name": "Lírio da Rapunzel", "category": "Flores especiais", "image": "images/31.jpeg", "price": ""}, {"id": 32, "name": "Tuli urso 🎓", "category": "Flores especiais", "image": "images/32.jpeg", "price": ""}, {"id": 33, "name": "Foto polaroid", "category": "Adicionais", "image": "images/33.jpeg", "price": "2.00"}, {"id": 34, "name": "Fio de Fada", "category": "Adicionais", "image": "images/34.jpeg", "price": "9.00"}, {"id": 35, "name": "Cartão personalizado", "category": "Adicionais", "image": "images/35.jpeg", "price": "4.00"}, {"id": 36, "name": "Temático/a sua escolha", "category": "Adicionais", "image": "images/36.jpeg", "price": "8.00"}, {"id": 37, "name": "Mini lavandas", "category": "Adicionais", "image": "images/37.jpeg", "price": "5.00"}, {"id": 38, "name": "Mini borboleta", "category": "Adicionais", "image": "images/38.jpeg", "price": "4.00"}, {"id": 39, "name": "Homem Aranha", "category": "Pelúcias", "image": "images/39.jpeg", "price": "50.00"}, {"id": 40, "name": "Urso lotso", "category": "Pelúcias", "image": "images/40.jpeg", "price": "60.00"}, {"id": 41, "name": "Garfield", "category": "Pelúcias", "image": "images/41.jpeg", "price": "50.00"}, {"id": 42, "name": "Pascal | Chaveiro", "category": "Pelúcias", "image": "images/42.jpeg", "price": "25.00"}, {"id": 43, "name": "Pelúcia 05", "category": "Pelúcias", "image": "images/43.jpeg", "price": ""}, {"id": 44, "name": "Pelúcia 06", "category": "Pelúcias", "image": "images/44.jpeg", "price": ""}];
+let products = JSON.parse(localStorage.getItem('gf_products_public_v2') || 'null') || initial;
+let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {phone:'5586981748569',instagram:'',lead:'4 a 7 dias de antecedência'};
+if(!settings.phone) settings.phone='5586981748569';
+let cart = JSON.parse(localStorage.getItem('gf_cart') || '{}');
+let active = 'Todos';
+const cats = ['Todos','Flores','Flores especiais','Adicionais','Pelúcias'];
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function persist(){localStorage.setItem('gf_cart',JSON.stringify(cart));document.getElementById('count').textContent=Object.values(cart).reduce((a,b)=>a+b,0);}
+function renderTabs(){document.getElementById('tabs').innerHTML=cats.map(c=>`<button class="tab ${active===c?'active':''}" onclick="setCategory('${c}')">${c}</button>`).join('');}
+function setCategory(c){active=c;renderTabs();renderProducts();}
+function renderProducts(){
+ const list=products.filter(p=>active==='Todos'||p.category===active);
+ document.getElementById('products').innerHTML=list.map(p=>`<article class="product">${p.image?`<img src="${p.image}" alt="${p.name}" loading="lazy">`:`<div class="noimage">Foto a adicionar</div>`}
+ <div class="pbody"><div class="pname">${p.name}</div><div class="price">${p.category==='Flores'||p.category==='Flores especiais'?'':(p.price?money(p.price):'Preço a cadastrar')}</div>
+ <button class="add" onclick="add(${p.id})">Adicionar ao carrinho</button></div></article>`).join('');
+}
+function add(id){cart[id]=(cart[id]||0)+1;persist();renderCart();document.getElementById('cart').classList.add('open');}
+function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];persist();renderCart();}
+function removeItem(id){delete cart[id];persist();renderCart();}
+function renderCart(){
+ const ids=Object.keys(cart);
+ const items=ids.map(id=>({p:products.find(x=>x.id==id),q:cart[id]})).filter(x=>x.p);
+ document.getElementById('cartItems').innerHTML=items.length?items.map(x=>`<div class="cartrow">${x.p.image?`<img src="${x.p.image}" alt="">`:`<div class="noimage">Sem foto</div>`}<div><b>${x.p.name}</b><div class="small">${x.p.category} · ${x.p.price?money(x.p.price):'valor a confirmar'}</div><button style="border:0;background:none;color:#98733a;padding:5px 0;cursor:pointer" onclick="removeItem(${x.p.id})">Remover</button></div><div class="qty"><button onclick="change(${x.p.id},-1)">−</button>${x.q}<button onclick="change(${x.p.id},1)">+</button></div></div>`).join(''):'<p class="notice">Seu carrinho está vazio.</p>';
+ const total=items.reduce((s,x)=>s+(x.p.price?Number(x.p.price)*x.q:0),0);
+ document.getElementById('total').textContent='Total dos itens com preço: '+money(total);
+}
+function toggleCart(){document.getElementById('cart').classList.toggle('open');renderCart();}
+function checkout(){
+ const ids=Object.keys(cart);if(!ids.length){alert('Adicione pelo menos um produto ao carrinho.');return;}
+ const phone=(settings.phone||'').replace(/\D/g,'');if(!phone){alert('Antes, abra “Editar catálogo” e cadastre o WhatsApp da loja.');return;}
+ const lines=['Olá! Gostaria de fazer um pedido na Giirassol Flores.','',`Meu nome: ${document.getElementById('customer').value||'Não informado'}`];
+ cats.slice(1).forEach(cat=>{const items=ids.map(id=>({p:products.find(x=>x.id==id),q:cart[id]})).filter(x=>x.p&&x.p.category===cat);if(items.length){lines.push('',cat+':');items.forEach(x=>lines.push(`- ${x.q}x ${x.p.name}${x.p.price?' — '+money(x.p.price)+' cada':''}`));}});
+ const total=ids.reduce((s,id)=>{const p=products.find(x=>x.id==id);return s+(p&&p.price?Number(p.price)*cart[id]:0);},0);
+ lines.push('',`Total dos itens com preço cadastrado: ${money(total)}`,'','Observações: '+(document.getElementById('notes').value||'Nenhuma'));
+ lines.push('',`Encomendas: ${settings.lead}.`,'Gostaria de confirmar o valor final e a disponibilidade do meu pedido.');
+ window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(lines.join('\n')),'_blank');
+}
+function toggleAdmin(){document.getElementById('admin').classList.toggle('open');document.getElementById('phone').value=settings.phone;document.getElementById('instagram').value=settings.instagram;document.getElementById('lead').value=settings.lead;renderAdmin();}
+function renderAdmin(){document.getElementById('adminProducts').innerHTML=products.map(p=>`<div class="adminitem"><div class="adminrow"><input id="n${p.id}" value="${String(p.name).replace(/"/g,'&quot;')}" aria-label="Nome do produto"><input id="v${p.id}" type="number" min="0" step="0.01" placeholder="Preço R$" value="${p.price||''}" aria-label="Preço"></div><div class="small">${p.category} · ${p.image?'foto cadastrada':'foto pendente'}</div></div>`).join('');}
+function saveProducts(){products=products.map(p=>({...p,name:document.getElementById('n'+p.id).value.trim()||p.name,price:(p.category==='Flores'||p.category==='Flores especiais')?'':document.getElementById('v'+p.id).value}));localStorage.setItem('gf_products_public_v2',JSON.stringify(products));renderProducts();renderCart();alert('Produtos atualizados!');}
+function saveSettings(){settings={phone:document.getElementById('phone').value,instagram:document.getElementById('instagram').value,lead:document.getElementById('lead').value};localStorage.setItem('gf_settings',JSON.stringify(settings));renderFooter();alert('Informações salvas!');}
+function renderFooter(){document.getElementById('phoneText').textContent=settings.phone?'WhatsApp: '+settings.phone:'WhatsApp a cadastrar';document.getElementById('instaText').textContent=settings.instagram?settings.instagram:'';}
+renderTabs();renderProducts();renderCart();renderFooter();persist();
+</script></body></html>
