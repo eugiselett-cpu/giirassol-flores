@@ -552,9 +552,13 @@ function checkout() {
   }
 
   const lines=[
-    'Olá! Gostaria de fazer um pedido na Giirassol Flores.',
+    '🌻✨ *PEDIDINHO ESPECIAL | GIIRASSOL FLORES* ✨🌻',
     '',
-    `Meu nome: ${document.getElementById('customer').value||'Não informado'}`
+    'Olá! 💛 Vim pelo catálogo e gostaria de fazer uma encomenda cheia de carinho.',
+    '',
+    '👤 *Nome:* '+(document.getElementById('customer').value||'Não informado'),
+    '',
+    '🧺 *MEU PEDIDO*'
   ];
 
   cats.slice(1).forEach(cat=>{
@@ -564,7 +568,7 @@ function checkout() {
     })).filter(x=>x.p&&x.p.category===cat);
 
     if(items.length) {
-      lines.push('',cat+':');
+      lines.push('',(cat==='Flores'?'🌷':cat==='Flores especiais'?'💐':cat==='Adicionais'?'🎀':'🧸')+' *'+cat.toUpperCase()+'*');
       items.forEach(x=>{
         lines.push(`- ${x.q}x ${x.p.name}${x.p.price?' — '+money(x.p.price)+' cada':''}`);
       });
@@ -578,12 +582,16 @@ function checkout() {
 
   lines.push(
     '',
-    `Total dos itens com preço cadastrado: ${money(total)}`,
+    '💰 *Total parcial dos itens com preço:* '+money(total),
+    '_Flores e flores especiais têm valor confirmado no atendimento._',
     '',
-    'Observações: '+(document.getElementById('notes').value||'Nenhuma'),
+    '📝 *Detalhes e personalização:* '+(document.getElementById('notes').value||'Nenhuma'),
     '',
-    `Encomendas: ${settings.lead}.`,
-    'Gostaria de confirmar o valor final e a disponibilidade do meu pedido.'
+    '📅 *Prazo para encomendas:* '+settings.lead+'.',
+    '',
+    '💌 Poderiam, por favor, confirmar o valor final e a disponibilidade?',
+    '',
+    'Muito obrigada! Estou ansiosa pelo meu pedido. 🌻💛'
   );
 
   window.open(
