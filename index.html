@@ -288,6 +288,11 @@ header {
     min-height:44px;
   }
 }
+
+.carttoggle.bump{animation:cartBump .48s ease}
+@keyframes cartBump{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-8deg) scale(1.08)}50%{transform:rotate(8deg) scale(1.08)}75%{transform:rotate(-4deg)}}
+.fly-photo{position:fixed;z-index:99;width:68px;height:68px;object-fit:contain;border-radius:12px;pointer-events:none;transition:transform .72s cubic-bezier(.2,.75,.25,1),opacity .72s ease}
+.add:active{transform:scale(.97)}
 </style>
 </head>
 
@@ -355,7 +360,11 @@ header {
   <span id="phoneText"></span>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.89.0"></script>
 <script>
+const SUPABASE_URL="https://plwtpqjdloziqgshyisn.supabase.co";
+const SUPABASE_KEY="sb_publishable_7fL4YZHParuDFtxctX1bcA_aOkEljcf";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const initial = [
   {id:1,name:"Lírio 1",category:"Flores",image:"images/1.jpeg",price:""},
   {id:2,name:"Lírio 2",category:"Flores",image:"images/2.jpeg",price:""},
@@ -406,7 +415,8 @@ const initial = [
   {id:44,name:"Pelúcia 06",category:"Pelúcias",image:"",price:""}
 ];
 
-let products = JSON.parse(localStorage.getItem('gf_products_public_v2') || 'null') || initial;
+let products = initial;
+async function loadRemoteCatalog(){try{const results=await Promise.all([db.from('products').select('id,name,category,image,price,active,sort_order').eq('active',true).order('sort_order'),db.from('store_settings').select('whatsapp,instagram,lead_time').eq('id',1).maybeSingle()]);const rows=results[0].data;const error=results[0].error;const store=results[1].data;if(error)throw error;if(rows&&rows.length)products=rows.map(p=>({...p,price:p.price==null?'':String(p.price)}));if(store)settings={phone:store.whatsapp,instagram:store.instagram,lead:store.lead_time};renderProducts();renderCart();renderFooter();}catch(err){console.warn('Catálogo remoto indisponível; usando catálogo local.',err);}}
 
 let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
   phone:'5586981748569',
@@ -462,18 +472,13 @@ function renderProducts() {
           ? ''
           : (p.price?money(p.price):'Preço a cadastrar')
         }</div>
-        <button class="add" onclick="add(${p.id})">Adicionar ao carrinho</button>
+        <button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>
       </div>
     </article>
   `).join('');
 }
 
-function add(id) {
-  cart[id]=(cart[id]||0)+1;
-  persist();
-  renderCart();
-  document.getElementById('cart').classList.add('open');
-}
+function add(id,button){cart[id]=(cart[id]||0)+1;persist();renderCart();const cartButton=document.querySelector('.carttoggle');if(cartButton){cartButton.classList.remove('bump');void cartButton.offsetWidth;cartButton.classList.add('bump');}const img=button&&button.closest('.product')&&button.closest('.product').querySelector('img');if(img&&cartButton){const a=img.getBoundingClientRect(),b=cartButton.getBoundingClientRect(),fly=img.cloneNode();fly.className='fly-photo';fly.style.left=a.left+'px';fly.style.top=a.top+'px';fly.style.width=Math.min(a.width,78)+'px';fly.style.height=Math.min(a.height,78)+'px';document.body.appendChild(fly);requestAnimationFrame(()=>{fly.style.transform='translate('+(b.left-a.left+b.width/2-a.width/2)+'px,'+(b.top-a.top+b.height/2-a.height/2)+'px) scale(.18) rotate(18deg)';fly.style.opacity='.25';});setTimeout(()=>fly.remove(),760);}}
 
 function change(id,d) {
   cart[id]=(cart[id]||0)+d;
@@ -599,6 +604,7 @@ renderProducts();
 renderCart();
 renderFooter();
 persist();
+loadRemoteCatalog();
 </script>
 
 </body>
