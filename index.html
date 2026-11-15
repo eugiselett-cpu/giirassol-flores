@@ -387,7 +387,19 @@ header.brand-header{position:relative;display:flex;align-items:center;justify-co
 .hero-copy{z-index:5}
 .hero-decor{position:absolute!important;width:clamp(58px,10vw,120px)!important;height:clamp(68px,12vw,135px)!important;object-fit:contain!important;pointer-events:none!important;z-index:3!important;inset:auto!important}
 .hero-decor-lt{left:0!important;top:0!important}.hero-decor-lb{left:0!important;bottom:0!important}.hero-decor-rt{right:0!important;top:0!important}.hero-decor-rb{right:0!important;bottom:0!important}
-@media(max-width:700px){header.brand-header{height:112px;padding:7px 62px}.store-logo{width:104px;max-width:104px;height:auto}.header-decor{width:58px;height:70px;top:50%}.header-decor.decor-left{left:-5px}.header-decor.decor-right{right:-5px}.hero-inner{aspect-ratio:16/7}.hero-decor{width:clamp(54px,16vw,86px)!important;height:clamp(62px,18vw,100px)!important}}</style>
+@media(max-width:700px){header.brand-header{height:112px;padding:7px 62px}.store-logo{width:104px;max-width:104px;height:auto}.header-decor{width:58px;height:70px;top:50%}.header-decor.decor-left{left:-5px}.header-decor.decor-right{right:-5px}.hero-inner{aspect-ratio:16/7}.hero-decor{width:clamp(54px,16vw,86px)!important;height:clamp(62px,18vw,100px)!important}}/* Decorative PNGs stay behind interactive header controls and animate on every screen */
+header.brand-header{isolation:isolate}
+.header-decor{display:block!important;z-index:1!important;pointer-events:none!important;opacity:0;animation:decorReveal .9s ease-out forwards,decorFloat 5s ease-in-out 1s infinite}
+.mobile-head-action,.mobile-head-actions,.store-logo{position:relative;z-index:5}
+.mobile-head-action{isolation:isolate}
+.store-logo{z-index:4}
+.hero-decor{opacity:0;animation:decorReveal .9s ease-out forwards,decorFloat 5s ease-in-out 1s infinite}
+.hero-copy{position:absolute;z-index:5}
+.tab-emoji{display:inline-block;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:clamp(25px,3vw,30px);line-height:1.1;font-style:normal}
+.tab svg{display:inline-block}
+@media(max-width:700px){.tab-emoji{font-size:29px}.mobile-head-action,.mobile-head-actions{z-index:6}.header-decor{z-index:1!important}}
+@media(prefers-reduced-motion:reduce){.header-decor,.hero-decor{animation:none!important;opacity:1!important}}
+</style>
 </head>
 
 <body>
@@ -562,7 +574,7 @@ function persist() {
   const head=document.getElementById('headCount');if(head)head.textContent=Object.values(cart).reduce((a,b)=>a+b,0);
 }
 
-function categoryIcon(c){const paths={Todos:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',Flores:'<path d="M12 12c-5-7 3-11 5-5 6-2 7 7-1 7 1 7-8 7-8 0-7 0-7-9-1-7 2-6 10-2 5 5Z"/><circle cx="12" cy="12" r="2"/>','Flores especiais':'<path d="M12 21V9m0 0C3 8 5 2 10 4c2 1 2 3 2 5Zm0 0c9-1 7-7 2-5-2 1-2 3-2 5Z"/>',Buquês:'<path d="M12 21V13m0 0L5 5m7 8 7-8M5 5c-4 3-1 8 4 7m10-7c4 3 1 8-4 7"/><path d="M9 16h6l-1 5h-4z"/>',Adicionais:'<path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/><circle cx="12" cy="12" r="3"/>',Pelúcias:'<circle cx="8" cy="7" r="3"/><circle cx="16" cy="7" r="3"/><path d="M4 19v-3a8 8 0 0 1 16 0v3z"/><circle cx="12" cy="13" r="3"/>'};return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[c]||paths.Todos)+'</svg>'}
+function categoryIcon(c){if(c==='Todos')return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';const emojis={Flores:'🌻','Flores especiais':'🌷','Buquês':'💐',Adicionais:'🎁',Pelúcias:'🧸'};return '<span class="tab-emoji" aria-hidden="true">'+(emojis[c]||'')+'</span>'}
 function renderTabs() {
   document.getElementById('tabs').innerHTML = cats.map(c =>
     `<button class="tab ${active===c?'active':''}" onclick="setCategory('${c}')">${categoryIcon(c)}<span>${c}</span></button>`
