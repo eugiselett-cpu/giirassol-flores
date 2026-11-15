@@ -264,7 +264,7 @@ header {
 }
 
 .old-price{text-decoration:line-through;color:#999;margin-right:5px}.sale-tag{display:inline-block;background:#b94b55;color:white;padding:4px 7px;border-radius:6px;font-size:10px;font-weight:bold}
-.footer {
+.hero{max-width:1120px;margin:20px auto;padding:0 18px}.hero-inner{min-height:260px;border-radius:18px;display:flex;align-items:center;background:linear-gradient(120deg,#f8e8bc,#fffaf0)}.hero-copy{padding:32px}.hero h2{font:clamp(28px,4vw,44px) Georgia,serif;color:var(--green);margin:0}.hero p{line-height:1.6}.hero a{text-decoration:none;display:inline-block}.shortcuts{max-width:1120px;margin:0 auto 22px;padding:0 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.shortcut{min-height:120px;border-radius:14px;background:var(--yellow);color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;font:20px Georgia,serif;padding:12px}.footer {
   text-align:center;
   padding:26px 16px;
   background:#f1eadb;
@@ -273,7 +273,7 @@ header {
   line-height:1.8;
 }
 
-@media(max-width:700px) {
+@media(max-width:700px) {.shortcuts{grid-template-columns:1fr 1fr}.shortcut{min-height:90px}
   .grid {
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:10px;
@@ -312,6 +312,8 @@ header {
   </div>
 </div>
 
+<section class="hero"><div class="hero-inner"><div class="hero-copy"><h2>Flores que encantam</h2><p>Buquês e presentes para tornar cada momento especial.</p><a class="btn" href="#products">Comprar agora</a></div></div></section>
+<section class="shortcuts"><a class="shortcut" href="#tabs"><b>Flores e buquês</b></a><a class="shortcut" href="#tabs"><b>Presentes especiais</b></a><a class="shortcut" href="#tabs"><b>Adicionais</b></a></section>
 <nav class="tabs" id="tabs"></nav>
 
 <main class="wrap">
