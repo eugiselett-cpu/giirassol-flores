@@ -377,7 +377,17 @@ header {
 .hero-inner>img.hero-decor{inset:auto;width:94px;height:110px;object-fit:contain;opacity:0;z-index:2}\n@keyframes decorReveal{from{opacity:0;transform:translateY(8px) scale(.92)}to{opacity:.96;transform:translateY(0) scale(1)}}
 @keyframes decorFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
 @media(prefers-reduced-motion:reduce){.header-decor,.hero-decor{animation:none;opacity:.95}}
-</style>
+header.brand-header{position:relative;display:flex;align-items:center;justify-content:center}
+.store-logo{width:min(180px,34vw);max-width:180px;height:auto;aspect-ratio:auto;object-fit:contain}
+.header-decor{position:absolute;top:50%;transform:translateY(-50%);width:clamp(58px,9vw,104px);height:clamp(58px,9vw,104px);object-fit:contain;pointer-events:none;z-index:2}
+.header-decor.decor-left{left:clamp(8px,3vw,30px)}
+.header-decor.decor-right{right:clamp(8px,3vw,30px)}
+.hero-inner{position:relative;isolation:isolate}
+.hero-inner>img.hero-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.hero-copy{z-index:5}
+.hero-decor{position:absolute!important;width:clamp(58px,10vw,120px)!important;height:clamp(68px,12vw,135px)!important;object-fit:contain!important;pointer-events:none!important;z-index:3!important;inset:auto!important}
+.hero-decor-lt{left:0!important;top:0!important}.hero-decor-lb{left:0!important;bottom:0!important}.hero-decor-rt{right:0!important;top:0!important}.hero-decor-rb{right:0!important;bottom:0!important}
+@media(max-width:700px){header.brand-header{height:112px;padding:7px 62px}.store-logo{width:104px;max-width:104px;height:auto}.header-decor{width:58px;height:70px;top:50%}.header-decor.decor-left{left:-5px}.header-decor.decor-right{right:-5px}.hero-inner{aspect-ratio:16/7}.hero-decor{width:clamp(54px,16vw,86px)!important;height:clamp(62px,18vw,100px)!important}}</style>
 </head>
 
 <body>
@@ -404,21 +414,11 @@ header {
   <button type="button" onclick="setCategory('Pelúcias');toggleMobileMenu(false)">Pelúcias</button>
   <button type="button" onclick="showFavorites();toggleMobileMenu(false)">♡ Meus favoritos</button>
 </aside>
-<div class="mobile-search" id="mobileSearch"><input id="mobileSearchInput" type="search" class="field" placeholder="Buscar produtos..." oninput="searchProducts(this.value)"></div>
-<div class="mobile-menu-shade" id="mobileMenuShade" onclick="toggleMobileMenu(false)"></div>
-<aside class="mobile-drawer" id="mobileDrawer" aria-label="Menu da loja">
-  <div class="drawer-head"><b>Menu</b><button type="button" onclick="toggleMobileMenu(false)" aria-label="Fechar menu">✕</button></div>
-  <button type="button" onclick="setCategory('Todos');toggleMobileMenu(false)">Todos os produtos</button>
-  <button type="button" onclick="setCategory('Flores');toggleMobileMenu(false)">Flores</button>
-  <button type="button" onclick="setCategory('Flores especiais');toggleMobileMenu(false)">Flores especiais</button>
-  <button type="button" onclick="setCategory('Buquês');toggleMobileMenu(false)">Buquês</button>
-  <button type="button" onclick="setCategory('Adicionais');toggleMobileMenu(false)">Adicionais</button>
-  <button type="button" onclick="setCategory('Pelúcias');toggleMobileMenu(false)">Pelúcias</button>
-</aside>
+
 
 <div class="top"><div><b>Nosso catálogo</b><div class="small">Escolha seus produtos e monte seu pedido.</div></div></div>
 
-<section class="hero"><div class="hero-inner" id="heroInner"><img class="hero-decor decor-left" id="decorHeroLeft" alt="" aria-hidden="true"><img class="hero-decor decor-right" id="decorHeroRight" alt="" aria-hidden="true"><div class="hero-copy"><h2>Flores que encantam</h2><p>Buquês e presentes para tornar cada momento especial.</p><a class="btn" href="#products">Comprar agora</a></div></div></section>
+<section class="hero"><div class="hero-inner" id="heroInner"><img class="hero-decor hero-decor-lt" id="decorHeroLeftTop" alt="" aria-hidden="true"><img class="hero-decor hero-decor-lb" id="decorHeroLeftBottom" alt="" aria-hidden="true"><img class="hero-decor hero-decor-rt" id="decorHeroRightTop" alt="" aria-hidden="true"><img class="hero-decor hero-decor-rb" id="decorHeroRightBottom" alt="" aria-hidden="true"><div class="hero-copy"><h2>Flores que encantam</h2><p>Buquês e presentes para tornar cada momento especial.</p><a class="btn" href="#products">Comprar agora</a></div></div></section>
 <section class="carousel-wrap" aria-label="Galeria de destaques"><div class="shortcuts" id="shortcuts"></div><button class="carousel-arrow prev" id="carouselPrev" aria-label="Fotos anteriores">‹</button><button class="carousel-arrow next" id="carouselNext" aria-label="Próximas fotos">›</button></section>
 <nav class="tabs" id="tabs"></nav>
 
@@ -532,7 +532,7 @@ const initial = [
 
 let products = initial;
 function setupCarousel(){const track=document.getElementById('shortcuts'),wrap=track?.parentElement,prev=document.getElementById('carouselPrev'),next=document.getElementById('carouselNext');if(!track||!wrap)return;if(window.gfCarouselTimer)clearInterval(window.gfCarouselTimer);track.querySelectorAll('[data-clone="1"]').forEach(x=>x.remove());const originals=Array.from(track.children);let index=0;const count=originals.length;wrap.classList.toggle('has-overflow',count>3);if(count<=3){track.style.transform='translateX(0)';if(prev)prev.onclick=null;if(next)next.onclick=null;return;}originals.slice(0,3).forEach(node=>{const clone=node.cloneNode(true);clone.dataset.clone='1';track.appendChild(clone);});const gap=parseFloat(getComputedStyle(track).gap)||0;const step=()=>originals[0].getBoundingClientRect().width+gap;const move=()=>{track.style.transition='transform .65s cubic-bezier(.22,.75,.25,1)';track.style.transform='translateX(-'+(index*step())+'px)';};const advance=()=>{index++;move();if(index===count){setTimeout(()=>{track.style.transition='none';index=0;track.style.transform='translateX(0)';},680);}};if(prev)prev.onclick=()=>{index=(index-1+count)%count;move();};if(next)next.onclick=()=>{advance();};window.gfCarouselTimer=setInterval(advance,3200);wrap.onmouseenter=()=>clearInterval(window.gfCarouselTimer);wrap.onmouseleave=()=>{clearInterval(window.gfCarouselTimer);window.gfCarouselTimer=setInterval(advance,3200);};}
-async function loadRemoteCatalog(){try{const results=await Promise.all([db.from('products').select('*').eq('active',true).order('sort_order'),db.from('store_settings').select('*').eq('id',1).maybeSingle()]);const rows=results[0].data;const error=results[0].error;const store=results[1].data;if(error)throw error;if(rows&&rows.length)products=rows.map(p=>({...p,price:p.price==null?'':String(p.price)}));if(store){settings={...settings,...store,phone:store.whatsapp,instagram:store.instagram,lead:store.lead_time};const logo=document.getElementById('storeLogo');if(logo){if(store.logo_image){logo.src=store.logo_image;logo.style.display='block';}else{logo.style.display='none';}}[['decorHeaderLeft','decor_header_left'],['decorHeaderRight','decor_header_right'],['decorHeroLeft','decor_hero_left'],['decorHeroRight','decor_hero_right']].forEach(([id,key])=>{const el=document.getElementById(id);if(el){el.src=store[key]||'';el.style.display=store[key]?'block':'none';}});document.documentElement.style.setProperty('--cream',store.theme_bg||'#fff9ef');document.documentElement.style.setProperty('--header-bg',store.theme_header||'#fff8e9');document.documentElement.style.setProperty('--paper',store.theme_surface||'#ffffff');document.documentElement.style.setProperty('--green',store.theme_primary||'#687c52');document.documentElement.style.setProperty('--yellow',store.theme_accent||'#f5e6b8');document.documentElement.style.setProperty('--ink',store.theme_text||'#4d473b');const hi=document.getElementById('heroInner');if(hi){hi.innerHTML=(store.hero_image?'<img src="'+String(store.hero_image).replace(/"/g,'&quot;')+'" alt="">':'')+'<div class="hero-copy"><a class="btn" href="#products">Compre agora</a></div>';}const sc=document.getElementById('shortcuts');if(sc&&Array.isArray(store.shortcuts)){sc.innerHTML='';store.shortcuts.forEach(x=>{const src=typeof x==='string'?x:(x&&x.image);if(!src)return;const link=document.createElement('a');link.className='shortcut';link.href='#tabs';const img=document.createElement('img');img.src=src;img.alt='';link.appendChild(img);sc.appendChild(link);});setupCarousel();}}renderProducts();renderCart();renderFooter();}catch(err){console.warn('Catálogo remoto indisponível; usando catálogo local.',err);}}
+async function loadRemoteCatalog(){try{const results=await Promise.all([db.from('products').select('*').eq('active',true).order('sort_order'),db.from('store_settings').select('*').eq('id',1).maybeSingle()]);const rows=results[0].data;const error=results[0].error;const store=results[1].data;if(error)throw error;if(rows&&rows.length)products=rows.map(p=>({...p,price:p.price==null?'':String(p.price)}));if(store){settings={...settings,...store,phone:store.whatsapp,instagram:store.instagram,lead:store.lead_time};const logo=document.getElementById('storeLogo');if(logo){if(store.logo_image){logo.src=store.logo_image;logo.style.display='block';}else{logo.style.display='none';}}[['decorHeaderLeft','decor_header_left'],['decorHeaderRight','decor_header_right'],['decorHeroLeftTop','decor_hero_left_top'],['decorHeroLeftBottom','decor_hero_left_bottom'],['decorHeroRightTop','decor_hero_right_top'],['decorHeroRightBottom','decor_hero_right_bottom']].forEach(([id,key])=>{const el=document.getElementById(id);if(el){el.src=store[key]||'';el.style.display=store[key]?'block':'none';}});document.documentElement.style.setProperty('--cream',store.theme_bg||'#fff9ef');document.documentElement.style.setProperty('--header-bg',store.theme_header||'#fff8e9');document.documentElement.style.setProperty('--paper',store.theme_surface||'#ffffff');document.documentElement.style.setProperty('--green',store.theme_primary||'#687c52');document.documentElement.style.setProperty('--yellow',store.theme_accent||'#f5e6b8');document.documentElement.style.setProperty('--ink',store.theme_text||'#4d473b');const hi=document.getElementById('heroInner');if(hi){hi.innerHTML=(store.hero_image?'<img class="hero-background" src="'+String(store.hero_image).replace(/"/g,'&quot;')+'" alt="">':'')+'<img class="hero-decor hero-decor-lt" id="decorHeroLeftTop" alt="" aria-hidden="true"><img class="hero-decor hero-decor-lb" id="decorHeroLeftBottom" alt="" aria-hidden="true"><img class="hero-decor hero-decor-rt" id="decorHeroRightTop" alt="" aria-hidden="true"><img class="hero-decor hero-decor-rb" id="decorHeroRightBottom" alt="" aria-hidden="true"><div class="hero-copy"><a class="btn" href="#products">Compre agora</a></div>';[['decorHeroLeftTop','decor_hero_left_top'],['decorHeroLeftBottom','decor_hero_left_bottom'],['decorHeroRightTop','decor_hero_right_top'],['decorHeroRightBottom','decor_hero_right_bottom']].forEach(([id,key])=>{const el=document.getElementById(id);if(el){el.src=store[key]||'';el.style.display=store[key]?'block':'none';}});}const sc=document.getElementById('shortcuts');if(sc&&Array.isArray(store.shortcuts)){sc.innerHTML='';store.shortcuts.forEach(x=>{const src=typeof x==='string'?x:(x&&x.image);if(!src)return;const link=document.createElement('a');link.className='shortcut';link.href='#tabs';const img=document.createElement('img');img.src=src;img.alt='';link.appendChild(img);sc.appendChild(link);});setupCarousel();}}renderProducts();renderCart();renderFooter();}catch(err){console.warn('Catálogo remoto indisponível; usando catálogo local.',err);}}
 
 let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
   phone:'5586981748569',
@@ -543,7 +543,8 @@ let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
 if(!settings.phone) settings.phone='5586981748569';
 
 let cart = JSON.parse(localStorage.getItem('gf_cart') || '{}');
-let active = 'Todos';\nlet favoritesOnly=false;let favorites=JSON.parse(localStorage.getItem('gf_favorites')||'[]');
+let active = 'Todos';
+let favoritesOnly=false;let favorites=JSON.parse(localStorage.getItem('gf_favorites')||'[]');
 
 const cats = ['Todos','Flores','Flores especiais','Buquês','Adicionais','Pelúcias'];
 
