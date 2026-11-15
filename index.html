@@ -274,6 +274,50 @@ header {
   line-height:1.8;
 }
 
+.mobile-head-action,.mobile-head-actions,.mobile-search,.mobile-menu-shade,.mobile-drawer,.mobile-bottom-nav{display:none}
+@media(max-width:700px){
+ body{padding-bottom:76px}
+ header.brand-header{height:112px;padding:7px 58px;position:relative;display:flex;justify-content:center;align-items:center}
+ .store-logo{width:100px;max-width:100px}
+ .mobile-head-action{display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--ink);font-size:30px;width:44px;height:44px;padding:0;cursor:pointer}
+ .menu-open{position:absolute;left:8px;top:50%;transform:translateY(-50%)}
+ .mobile-head-actions{display:flex;position:absolute;right:8px;top:50%;transform:translateY(-50%);gap:2px;align-items:center}
+ .cart-head{position:relative;font-size:24px}
+ #headCount{position:absolute;top:0;right:-2px;background:var(--green);color:white;border-radius:20px;min-width:17px;height:17px;font:10px Arial;display:grid;place-items:center}
+ .top{display:none}
+ .hero{width:100%;max-width:none;margin:0 auto 14px;padding:0}
+ .hero-inner{width:100%;aspect-ratio:16/7}
+ .carousel-wrap{width:100%;max-width:none;padding:0 8px;margin:0 auto 20px}
+ .shortcuts{gap:7px}
+ .shortcut{flex-basis:calc((100% - 14px)/3)}
+ nav.tabs{width:100%;max-width:none;padding:0 12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 auto 16px}
+ .tab{padding:13px 4px;border-radius:12px;font-size:13px;min-width:0;white-space:normal}
+ main.wrap{width:100%;max-width:none;padding:0 12px 26px}
+ .intro{font-size:14px;text-align:center;margin:8px 0 16px}
+ .section-title,.favorites-title{display:none!important}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .product{border-radius:17px;background:var(--paper)}
+ .product img,.noimage{height:auto;aspect-ratio:1/1;object-fit:contain;padding:8px}
+ .pbody{padding:10px}
+ .pname{font-size:13px;line-height:1.35}
+ .price{font-size:12px}
+ .add{font-size:12px;padding:11px 6px;border-radius:10px}
+ .cartbox{display:none}
+ .panel{bottom:82px;max-height:75vh;z-index:30}
+ .mobile-bottom-nav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;z-index:20;left:0;right:0;bottom:0;padding:7px 8px calc(7px + env(safe-area-inset-bottom));background:var(--header-bg,#fff8e9);border-top:1px solid var(--line);box-shadow:0 -3px 14px #0000000d}
+ .mobile-bottom-nav button{border:0;background:transparent;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;padding:3px}
+ .mobile-bottom-nav button span{font-size:23px;line-height:1.1}
+ .mobile-bottom-nav button.active{color:var(--green)}
+ .mobile-search{display:none;padding:8px 12px;background:var(--header-bg,#fff8e9)}
+ .mobile-search.open{display:block}
+ .mobile-search .field{margin:0}
+ .mobile-menu-shade.open{display:block;position:fixed;inset:0;background:#0006;z-index:40}
+ .mobile-drawer.open{display:flex;flex-direction:column;gap:5px;position:fixed;z-index:41;left:0;top:0;bottom:0;width:min(82vw,320px);padding:18px;background:var(--paper);box-shadow:8px 0 25px #0002}
+ .drawer-head{display:flex;justify-content:space-between;align-items:center;font:22px Georgia,serif;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+ .drawer-head button,.mobile-drawer>button{border:0;background:transparent;color:var(--ink);text-align:left;padding:13px 8px;font-size:16px}
+ .drawer-head button{font-size:22px;padding:4px 8px}
+ .footer{padding-bottom:22px}
+}
 @media(max-width:700px) {
   .grid {
     grid-template-columns:repeat(2,minmax(0,1fr));
@@ -301,15 +345,26 @@ header {
 <body>
 
 <header class="brand-header">
+  <button class="mobile-head-action menu-open" type="button" onclick="toggleMobileMenu(true)" aria-label="Abrir menu">☰</button>
   <img id="storeLogo" class="store-logo" src="" alt="Logo Giirassol Flores" style="display:none">
-</header>
-
-<div class="top">
-  <div>
-    <b>Nosso catálogo</b>
-    <div class="small">Escolha seus produtos e monte seu pedido.</div>
+  <div class="mobile-head-actions">
+    <button class="mobile-head-action" type="button" onclick="toggleSearch()" aria-label="Pesquisar">⌕</button>
+    <button class="mobile-head-action cart-head" type="button" onclick="toggleCart()" aria-label="Abrir carrinho">🛒<span id="headCount">0</span></button>
   </div>
-</div>
+</header>
+<div class="mobile-search" id="mobileSearch"><input id="mobileSearchInput" type="search" class="field" placeholder="Buscar produtos..." oninput="searchProducts(this.value)"></div>
+<div class="mobile-menu-shade" id="mobileMenuShade" onclick="toggleMobileMenu(false)"></div>
+<aside class="mobile-drawer" id="mobileDrawer" aria-label="Menu da loja">
+  <div class="drawer-head"><b>Menu</b><button type="button" onclick="toggleMobileMenu(false)" aria-label="Fechar menu">✕</button></div>
+  <button type="button" onclick="setCategory('Todos');toggleMobileMenu(false)">Todos os produtos</button>
+  <button type="button" onclick="setCategory('Flores');toggleMobileMenu(false)">Flores</button>
+  <button type="button" onclick="setCategory('Flores especiais');toggleMobileMenu(false)">Flores especiais</button>
+  <button type="button" onclick="setCategory('Buquês');toggleMobileMenu(false)">Buquês</button>
+  <button type="button" onclick="setCategory('Adicionais');toggleMobileMenu(false)">Adicionais</button>
+  <button type="button" onclick="setCategory('Pelúcias');toggleMobileMenu(false)">Pelúcias</button>
+</aside>
+
+<div class="top"><div><b>Nosso catálogo</b><div class="small">Escolha seus produtos e monte seu pedido.</div></div></div>
 
 <section class="hero"><div class="hero-inner" id="heroInner"><div class="hero-copy"><h2>Flores que encantam</h2><p>Buquês e presentes para tornar cada momento especial.</p><a class="btn" href="#products">Comprar agora</a></div></div></section>
 <section class="carousel-wrap" aria-label="Galeria de destaques"><div class="shortcuts" id="shortcuts"></div><button class="carousel-arrow prev" id="carouselPrev" aria-label="Fotos anteriores">‹</button><button class="carousel-arrow next" id="carouselNext" aria-label="Próximas fotos">›</button></section>
@@ -325,6 +380,11 @@ header {
     🛒 Carrinho (<span id="count">0</span>)
   </button>
 </div>
+<nav class="mobile-bottom-nav" aria-label="Navegação principal">
+  <button class="active" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span>⌂</span>Início</button>
+  <button type="button" onclick="toggleCart()"><span>♧</span>Pedidos</button>
+  <button type="button" onclick="contactStore()"><span>◉</span>Contato</button>
+</nav>
 
 <aside id="cart" class="panel">
   <div style="display:flex;justify-content:space-between;align-items:center">
@@ -445,6 +505,7 @@ function persist() {
   localStorage.setItem('gf_cart',JSON.stringify(cart));
   document.getElementById('count').textContent =
     Object.values(cart).reduce((a,b)=>a+b,0);
+  const head=document.getElementById('headCount');if(head)head.textContent=Object.values(cart).reduce((a,b)=>a+b,0);
 }
 
 function renderTabs() {
@@ -532,6 +593,10 @@ function renderCart() {
     'Total dos itens com preço: '+money(total);
 }
 
+function toggleMobileMenu(open){const drawer=document.getElementById('mobileDrawer'),shade=document.getElementById('mobileMenuShade');if(!drawer||!shade)return;drawer.classList.toggle('open',!!open);shade.classList.toggle('open',!!open)}
+function toggleSearch(){const box=document.getElementById('mobileSearch');if(!box)return;box.classList.toggle('open');if(box.classList.contains('open'))document.getElementById('mobileSearchInput').focus()}
+function searchProducts(value){const term=String(value||'').toLocaleLowerCase('pt-BR');document.querySelectorAll('.product').forEach(card=>{card.style.display=card.textContent.toLocaleLowerCase('pt-BR').includes(term)?'':'none'})}
+function contactStore(){const phone=(settings.phone||'').replace(/\\D/g,'');if(phone)window.open('https://wa.me/'+phone,'_blank');else document.querySelector('.footer')?.scrollIntoView({behavior:'smooth'})}
 function toggleCart() {
   document.getElementById('cart').classList.toggle('open');
   renderCart();
