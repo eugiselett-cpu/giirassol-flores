@@ -399,7 +399,12 @@ header.brand-header{isolation:isolate}
 .tab svg{display:inline-block}
 @media(max-width:700px){.tab-emoji{font-size:29px}.mobile-head-action,.mobile-head-actions{z-index:6}.header-decor{z-index:1!important}}
 @media(prefers-reduced-motion:reduce){.header-decor,.hero-decor{animation:none!important;opacity:1!important}}
-</style>
+/* Restore the header controls to the outer edges while keeping PNGs behind them */
+@media(max-width:700px){
+ .menu-open{position:absolute!important;left:8px!important;right:auto!important;top:50%!important;transform:translateY(-50%)!important;z-index:6!important}
+ .mobile-head-actions{display:flex!important;position:absolute!important;right:8px!important;left:auto!important;top:50%!important;transform:translateY(-50%)!important;z-index:6!important}
+ .mobile-head-actions .mobile-head-action{position:relative!important;z-index:6!important}
+}</style>
 </head>
 
 <body>
