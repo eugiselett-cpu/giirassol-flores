@@ -35,7 +35,7 @@ header {
   border-bottom:1px solid var(--line);
 }
 
-.brand-header{display:flex;justify-content:center;align-items:center;min-height:0}.store-logo{display:block;width:clamp(112px,22vw,210px);aspect-ratio:1/1;object-fit:contain;background:transparent}
+.brand-header{display:flex;justify-content:center;align-items:center;min-height:0}.store-logo{display:block;width:min(calc((100vw - 52px)/3),352px);aspect-ratio:1/1;object-fit:contain;background:transparent}
 .brand {
   font:clamp(32px,5vw,48px) Georgia,serif;
   color:var(--green);
@@ -301,7 +301,7 @@ header {
 <body>
 
 <header class="brand-header">
-  <img id="storeLogo" class="store-logo" src="" alt="Logo Giirassol Flores">
+  <img id="storeLogo" class="store-logo" src="" alt="Logo Giirassol Flores" style="display:none">
 </header>
 
 <div class="top">
