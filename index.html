@@ -596,7 +596,7 @@ function renderCart() {
 function toggleMobileMenu(open){const drawer=document.getElementById('mobileDrawer'),shade=document.getElementById('mobileMenuShade');if(!drawer||!shade)return;drawer.classList.toggle('open',!!open);shade.classList.toggle('open',!!open)}
 function toggleSearch(){const box=document.getElementById('mobileSearch');if(!box)return;box.classList.toggle('open');if(box.classList.contains('open'))document.getElementById('mobileSearchInput').focus()}
 function searchProducts(value){const term=String(value||'').toLocaleLowerCase('pt-BR');document.querySelectorAll('.product').forEach(card=>{card.style.display=card.textContent.toLocaleLowerCase('pt-BR').includes(term)?'':'none'})}
-function contactStore(){const phone=(settings.phone||'').replace(/\\D/g,'');if(phone)window.open('https://wa.me/'+phone,'_blank');else document.querySelector('.footer')?.scrollIntoView({behavior:'smooth'})}
+function contactStore(){const phone=(settings.phone||'').replace(/\D/g,'');if(phone)window.open('https://wa.me/'+phone,'_blank');else document.querySelector('.footer')?.scrollIntoView({behavior:'smooth'})}
 function toggleCart() {
   document.getElementById('cart').classList.toggle('open');
   renderCart();
