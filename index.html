@@ -263,6 +263,7 @@ header {
   color:var(--muted);
 }
 
+.old-price{text-decoration:line-through;color:#999;margin-right:5px}.sale-tag{display:inline-block;background:#b94b55;color:white;padding:4px 7px;border-radius:6px;font-size:10px;font-weight:bold}
 .footer {
   text-align:center;
   padding:26px 16px;
@@ -416,7 +417,7 @@ const initial = [
 ];
 
 let products = initial;
-async function loadRemoteCatalog(){try{const results=await Promise.all([db.from('products').select('id,name,category,image,price,active,sort_order').eq('active',true).order('sort_order'),db.from('store_settings').select('whatsapp,instagram,lead_time').eq('id',1).maybeSingle()]);const rows=results[0].data;const error=results[0].error;const store=results[1].data;if(error)throw error;if(rows&&rows.length)products=rows.map(p=>({...p,price:p.price==null?'':String(p.price)}));if(store)settings={phone:store.whatsapp,instagram:store.instagram,lead:store.lead_time};renderProducts();renderCart();renderFooter();}catch(err){console.warn('Catálogo remoto indisponível; usando catálogo local.',err);}}
+async function loadRemoteCatalog(){try{const results=await Promise.all([db.from('products').select('*').eq('active',true).order('sort_order'),db.from('store_settings').select('*').eq('id',1).maybeSingle()]);const rows=results[0].data;const error=results[0].error;const store=results[1].data;if(error)throw error;if(rows&&rows.length)products=rows.map(p=>({...p,price:p.price==null?'':String(p.price)}));if(store)settings={...settings,...store,phone:store.whatsapp,instagram:store.instagram,lead:store.lead_time};renderProducts();renderCart();renderFooter();}catch(err){console.warn('Catálogo remoto indisponível; usando catálogo local.',err);}}
 
 let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
   phone:'5586981748569',
@@ -429,7 +430,7 @@ if(!settings.phone) settings.phone='5586981748569';
 let cart = JSON.parse(localStorage.getItem('gf_cart') || '{}');
 let active = 'Todos';
 
-const cats = ['Todos','Flores','Flores especiais','Adicionais','Pelúcias'];
+const cats = ['Todos','Flores','Flores especiais','Buquês','Adicionais','Pelúcias'];
 
 function money(v) {
   return Number(v||0).toLocaleString('pt-BR',{
@@ -468,9 +469,7 @@ function renderProducts() {
       <div class="pbody">
         <div class="pname">${p.name}</div>
         <div class="price">${
-          p.category==='Flores'||p.category==='Flores especiais'
-          ? ''
-          : (p.price?money(p.price):'Preço a cadastrar')
+          p.promo_active&&p.promo_price!=null?'<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br><b>'+money(p.promo_price)+'</b> : ((p.price!==null&&p.price!==''&&p.price!==undefined)?money(p.price):(p.category==='Flores'||p.category==='Flores especiais'?'':'Preço a cadastrar'))
         }</div>
         <button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>
       </div>
@@ -510,7 +509,7 @@ function renderCart() {
         }
         <div>
           <b>${x.p.name}</b>
-          <div class="small">${x.p.category} · ${x.p.price?money(x.p.price):'valor a confirmar'}</div>
+          <div class="small">${x.p.category} · ${x.p.price!==null&&x.p.price!==''&&x.p.price!==undefined?money(x.p.promo_active&&x.p.promo_price!=null?x.p.promo_price:x.p.price):'valor a confirmar'}</div>
           <button style="border:0;background:none;color:#98733a;padding:5px 0;cursor:pointer"
             onclick="removeItem(${x.p.id})">Remover</button>
         </div>
@@ -524,7 +523,7 @@ function renderCart() {
     : '<p class="notice">Seu carrinho está vazio.</p>';
 
   const total=items.reduce((s,x)=>
-    s+(x.p.price?Number(x.p.price)*x.q:0),0
+    s+((x.p.price!==null&&x.p.price!==''&&x.p.price!==undefined)?(x.p.promo_active&&x.p.promo_price!=null?Number(x.p.promo_price):Number(x.p.price))*x.q:0),0
   );
 
   document.getElementById('total').textContent =
@@ -568,16 +567,16 @@ function checkout() {
     })).filter(x=>x.p&&x.p.category===cat);
 
     if(items.length) {
-      lines.push('',(cat==='Flores'?'🌷':cat==='Flores especiais'?'💐':cat==='Adicionais'?'🎀':'🧸')+' *'+cat.toUpperCase()+'*');
+      lines.push('',(cat==='Flores'?'🌷':cat==='Flores especiais'?'💐':cat==='Buquês'?'💐':cat==='Adicionais'?'🎀':'🧸')+' *'+cat.toUpperCase()+'*');
       items.forEach(x=>{
-        lines.push(`- ${x.q}x ${x.p.name}${x.p.price?' — '+money(x.p.price)+' cada':''}`);
+        lines.push(`- ${x.q}x ${x.p.name}${x.p.price!==null&&x.p.price!==''&&x.p.price!==undefined?' — '+money(x.p.promo_active&&x.p.promo_price!=null?x.p.promo_price:x.p.price)+' cada':''}`);
       });
     }
   });
 
   const total=ids.reduce((s,id)=>{
     const p=products.find(x=>x.id==id);
-    return s+(p&&p.price?Number(p.price)*cart[id]:0);
+    return s+(p&&p.price!==null&&p.price!==''&&p.price!==undefined?(p.promo_active&&p.promo_price!=null?Number(p.promo_price):Number(p.price))*cart[id]:0);
   },0);
 
   lines.push(
