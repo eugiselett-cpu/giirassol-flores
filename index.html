@@ -974,7 +974,7 @@ function removeItem(id) {
 }
 
 function renderCart() {
-  const leadNotice=document.getElementById('cartLeadNotice');if(leadNotice)leadNotice.innerHTML='🌻 Nossas encomendas precisam ser feitas com <strong>'+String(settings.lead||'2 a 7 dias de antecedência')+'</strong>.';
+  const leadNotice=document.getElementById('cartLeadNotice');if(leadNotice)leadNotice.innerHTML='🌻 Nossas encomendas precisam ser feitas com <strong>'+String(settings.lead||'2 a 7 dias de antecedência')+'</strong> ou conforme a nossa agenda.';
   const ids=Object.keys(cart);
 
   const items=ids.map(id=>({
@@ -1090,7 +1090,7 @@ function checkout() {
     '',
     '📝 *Detalhes e personalização:* '+(document.getElementById('notes').value||'Nenhuma'),
     '',
-    '🌻 *Antecedência para encomendas:* '+settings.lead+'. Por favor, considere esse prazo ao escolher a data desejada.',
+    '🌻 *Antecedência para encomendas:* '+settings.lead+' ou conforme a nossa agenda. Por favor, considere essa disponibilidade ao escolher a data desejada.',
     '🚗 *Forma de recebimento:* '+deliveryMethod,
     ...(deliveryMethod==='Entrega em domicílio'?['📍 *Endereço:* '+deliveryAddress]:[]),
     '💳 *Forma de pagamento:* '+paymentMethod,
