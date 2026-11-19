@@ -941,7 +941,7 @@ function renderProducts() {
         <div class="price">${
           p.promo_active&&p.promo_price!=null?('<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br><b>'+money(p.promo_price)+'</b>'):((p.price!==null&&p.price!==''&&p.price!==undefined)?money(p.price):(p.category==='Flores'||p.category==='Flores especiais'?'':'Preço a cadastrar'))
         }</div>
-        <button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>
+        ${p.available===false?'<div class="unavailable-label">Indisponível no momento</div>':`<button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>`}
       </div>
     </article>
   `).join('');
