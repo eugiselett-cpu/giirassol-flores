@@ -545,6 +545,18 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .product-dialog-note{font-size:13px;line-height:1.55;color:var(--muted);margin:10px 0 16px}
 .product-dialog-add{width:100%;padding:13px;border:0;border-radius:11px;background:var(--green);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
 @media(max-width:700px){.detail-image-trigger img,.detail-image-trigger .noimage{height:auto;aspect-ratio:1/1}.product-dialog-card{padding:14px}.product-dialog-image{height:min(42vh,320px)}}
+/* Customer review submission form */
+.review-submit-section{width:min(100% - 36px,760px);margin:0 auto 26px;padding:20px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:18px}
+.review-submit-section h2{margin:0 0 7px;text-align:center;font:clamp(21px,2.8vw,27px) Georgia,serif;color:var(--ink)}
+.review-submit-section>p{margin:0 0 15px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
+.review-submit-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.review-submit-section label{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.review-submit-section .field{width:100%;padding:11px;border:1px solid #ddd3bd;border-radius:9px;margin:6px 0 12px;font:14px Arial,sans-serif;background:var(--paper,#fff);color:var(--ink)}
+.review-submit-section textarea{resize:vertical}
+.review-submit-section .review-submit-full{grid-column:1/-1}
+.review-submit-section .btn{width:100%;min-height:45px}
+.review-submit-status{min-height:20px;margin-top:9px;text-align:center;font-size:13px;color:var(--muted)}
+@media(max-width:600px){.review-submit-section{width:calc(100% - 24px);padding:16px 12px}.review-submit-grid{grid-template-columns:1fr}.review-submit-section .review-submit-full{grid-column:auto}}
 /* Customer testimonials */
 .reviews-section{width:min(100% - 36px,1120px);margin:0 auto 34px;padding:22px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:18px}
 .reviews-title{text-align:center;margin:0 0 7px;font:clamp(22px,3vw,28px) Georgia,serif;color:var(--ink)}
@@ -726,6 +738,21 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
     <div id="productDialogContent"></div>
   </section>
 </div>
+
+<section class="review-submit-section" id="reviewSubmitSection">
+  <h2>Já recebeu seu pedido? Conte como foi! 💛</h2>
+  <p>Sua opinião ajuda outras pessoas a conhecerem nosso trabalho. Se quiser, envie também uma foto do seu presente.</p>
+  <form id="customerReviewForm">
+    <div class="review-submit-grid">
+      <div><label for="customerReviewName">Seu nome</label><input class="field" id="customerReviewName" maxlength="80" required placeholder="Como podemos chamar você?"></div>
+      <div><label for="customerReviewRating">Sua avaliação</label><select class="field" id="customerReviewRating" required><option value="5">★★★★★ — Amei!</option><option value="4">★★★★☆ — Muito bom</option><option value="3">★★★☆☆ — Bom</option><option value="2">★★☆☆☆ — Regular</option><option value="1">★☆☆☆☆ — Pode melhorar</option></select></div>
+      <div class="review-submit-full"><label for="customerReviewComment">Conte como foi sua experiência</label><textarea class="field" id="customerReviewComment" rows="4" maxlength="500" required placeholder="Escreva seu depoimento..."></textarea></div>
+      <div class="review-submit-full"><label for="customerReviewPhoto">Foto do seu pedido (opcional)</label><input class="field" id="customerReviewPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small class="muted">Imagem JPG, PNG ou WEBP, até 5 MB.</small></div>
+    </div>
+    <button class="btn" id="sendCustomerReview" type="submit">Enviar minha avaliação</button>
+    <div class="review-submit-status" id="customerReviewStatus" role="status" aria-live="polite"></div>
+  </form>
+</section>
 
 <section class="reviews-section" id="reviewsSection" hidden aria-label="Avaliações de clientes">
   <h2 class="reviews-title">Carinho que floresce em cada pedido 🌻</h2>
@@ -1068,6 +1095,32 @@ function confirmCheckout(){
   window.open(window.gfCheckoutUrl,'_blank');
   closeOrderConfirmation();
 }
+
+document.getElementById('customerReviewForm')?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const form=event.currentTarget,button=document.getElementById('sendCustomerReview'),status=document.getElementById('customerReviewStatus');
+  const name=document.getElementById('customerReviewName').value.trim();
+  const comment=document.getElementById('customerReviewComment').value.trim();
+  const rating=Number(document.getElementById('customerReviewRating').value);
+  const file=document.getElementById('customerReviewPhoto').files[0];
+  if(!name||!comment){status.textContent='Preencha seu nome e seu depoimento.';return;}
+  if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024)){status.textContent='Escolha uma imagem JPG, PNG ou WEBP de até 5 MB.';return;}
+  button.disabled=true;status.textContent='Enviando sua avaliação...';
+  try{
+    let photoUrl=null;
+    if(file){
+      const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+      const path='review-photos/'+Date.now()+'-'+Math.random().toString(36).slice(2,10)+'.'+ext;
+      const {error:uploadError}=await db.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false});
+      if(uploadError)throw uploadError;
+      photoUrl=db.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    }
+    const {error}=await db.from('customer_reviews').insert({customer_name:name,rating,comment,photo_url:photoUrl,active:false});
+    if(error)throw error;
+    form.reset();status.textContent='Obrigada! Sua avaliação foi enviada e aparecerá no site depois da aprovação da loja. 🌻';
+  }catch(error){console.error(error);status.textContent='Não foi possível enviar agora. Tente novamente em alguns instantes.';}
+  finally{button.disabled=false;}
+});
 
 async function loadCustomerReviews(){
   const section=document.getElementById('reviewsSection'),grid=document.getElementById('reviewsGrid');
