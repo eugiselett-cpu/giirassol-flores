@@ -545,6 +545,16 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .product-dialog-note{font-size:13px;line-height:1.55;color:var(--muted);margin:10px 0 16px}
 .product-dialog-add{width:100%;padding:13px;border:0;border-radius:11px;background:var(--green);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
 @media(max-width:700px){.detail-image-trigger img,.detail-image-trigger .noimage{height:auto;aspect-ratio:1/1}.product-dialog-card{padding:14px}.product-dialog-image{height:min(42vh,320px)}}
+/* Customer testimonials */
+.reviews-section{width:min(100% - 36px,1120px);margin:0 auto 34px;padding:22px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:18px}
+.reviews-title{text-align:center;margin:0 0 7px;font:clamp(22px,3vw,28px) Georgia,serif;color:var(--ink)}
+.reviews-subtitle{text-align:center;margin:0 0 18px;color:var(--muted);font-size:13px}
+.reviews-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.review-card{background:var(--cream);border-radius:13px;padding:16px}
+.review-stars{color:#c59622;letter-spacing:2px;font-size:17px;margin-bottom:8px}
+.review-comment{font-size:14px;line-height:1.55;color:var(--ink);margin:0 0 12px;overflow-wrap:anywhere}
+.review-author{font-size:13px;font-weight:700;color:var(--green)}
+@media(max-width:700px){.reviews-section{width:calc(100% - 24px);padding:16px 12px;margin-bottom:24px}.reviews-grid{grid-template-columns:1fr;gap:9px}.review-card{padding:13px}}
 /* Floating WhatsApp contact */
 .whatsapp-float{position:fixed;left:clamp(18px,4vw,54px);bottom:92px;z-index:24;display:flex;align-items:center;gap:9px;padding:13px 18px;border:0;border-radius:30px;background:#258b55;color:#fff;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 4px 16px #0003;cursor:pointer;transition:transform .2s,box-shadow .2s}
 .whatsapp-float:hover{transform:translateY(-2px);box-shadow:0 7px 20px #0003}
@@ -716,6 +726,12 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
     <div id="productDialogContent"></div>
   </section>
 </div>
+
+<section class="reviews-section" id="reviewsSection" hidden aria-label="Avaliações de clientes">
+  <h2 class="reviews-title">Carinho que floresce em cada pedido 🌻</h2>
+  <p class="reviews-subtitle">Veja o que nossas clientes dizem sobre a experiência.</p>
+  <div class="reviews-grid" id="reviewsGrid"></div>
+</section>
 
 <footer class="footer">
   <b>Giirassol Flores</b><br>
@@ -1053,6 +1069,24 @@ function confirmCheckout(){
   closeOrderConfirmation();
 }
 
+async function loadCustomerReviews(){
+  const section=document.getElementById('reviewsSection'),grid=document.getElementById('reviewsGrid');
+  if(!section||!grid)return;
+  try{
+    const {data,error}=await db.from('customer_reviews').select('customer_name,rating,comment').eq('active',true).order('sort_order').order('created_at',{ascending:false});
+    if(error)throw error;
+    if(!data||!data.length){section.hidden=true;return;}
+    grid.innerHTML=data.map(r=>{
+      const card=document.createElement('article');card.className='review-card';
+      const stars=document.createElement('div');stars.className='review-stars';const rating=Math.max(0,Math.min(5,Number(r.rating)||0));stars.textContent='★'.repeat(rating)+'☆'.repeat(5-rating);
+      const comment=document.createElement('p');comment.className='review-comment';comment.textContent='“'+r.comment+'”';
+      const author=document.createElement('div');author.className='review-author';author.textContent=r.customer_name;
+      card.append(stars,comment,author);return card.outerHTML;
+    }).join('');
+    section.hidden=false;
+  }catch(e){console.warn('Avaliações indisponíveis.',e);section.hidden=true;}
+}
+
 function renderFooter() {
   document.getElementById('phoneText').textContent =
     'WhatsApp: '+settings.phone;
@@ -1065,6 +1099,7 @@ renderProducts();
 renderCart();
 renderFooter();
 persist();
+loadCustomerReviews();
 loadRemoteCatalog();
 </script>
 
