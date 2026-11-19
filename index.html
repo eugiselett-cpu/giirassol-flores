@@ -620,6 +620,7 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 
 .order-lead-notice{margin:10px 0 14px;padding:11px 12px;border-radius:10px;background:#f7f0df;color:#665638;line-height:1.5;font-size:12px}
 .order-lead-notice strong{color:var(--green)}
+ .unavailable-label{display:block;text-align:center;background:#f2e8e3;color:#8b5146;border-radius:9px;padding:10px 8px;font-size:12px;font-weight:700;margin-top:auto}
 </style>
 </head>
 
@@ -901,7 +902,7 @@ function renderPromotions(term){
       <div class="promotion-card-body">
         <div class="promotion-card-name">${p.name}</div>
         <div class="promotion-prices"><span class="old-price">${money(p.price)}</span><span class="sale-tag">PROMOÇÃO</span><br><b>${money(p.promo_price)}</b></div>
-        <button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>
+        ${p.available===false?'<div class="unavailable-label">Indisponível no momento</div>':`<button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>`}
         <button class="product-share" type="button" onclick="shareProduct(${p.id})" aria-label="Compartilhar ${p.name} pelo WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg>Compartilhar</button>
       </div>
     </article>
@@ -952,15 +953,18 @@ function openProductDetails(id){
   const priceHtml=p.promo_active&&p.promo_price!=null?'<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br>'+money(p.promo_price):(hasPrice?money(p.price):'Valor a confirmar');
   const imageHtml=p.image?'<img class="product-dialog-image" src="'+p.image+'" alt="'+p.name+'">':'<div class="noimage product-dialog-image">Foto a adicionar</div>';
   const note=(p.category==='Flores'||p.category==='Flores especiais')?'O valor desta peça é confirmado pelo atendimento.':'Consulte a disponibilidade pelo atendimento.';
-  document.getElementById('productDialogContent').innerHTML=imageHtml+'<h2 class="product-dialog-name" id="productDialogName">'+p.name+'</h2><div class="product-dialog-category">'+p.category+'</div><div class="product-dialog-price">'+priceHtml+'</div><p class="product-dialog-note">'+note+' Encomendas com '+settings.lead+'.</p><button class="product-dialog-add" type="button" onclick="add('+p.id+',null);closeProductDetails()">Adicionar ao carrinho</button><button class="product-share product-dialog-share" type="button" onclick="shareProduct('+p.id+')">Compartilhar pelo WhatsApp</button>';
+  const availabilityHtml=p.available===false?'<p class="unavailable-label">Indisponível no momento</p>':'<button class="product-dialog-add" type="button" onclick="add('+p.id+',null);closeProductDetails()">Adicionar ao carrinho</button>';
+  document.getElementById('productDialogContent').innerHTML=imageHtml+'<h2 class="product-dialog-name" id="productDialogName">'+p.name+'</h2><div class="product-dialog-category">'+p.category+'</div><div class="product-dialog-price">'+priceHtml+'</div><p class="product-dialog-note">'+note+' Encomendas com '+settings.lead+'.</p>'+availabilityHtml+'<button class="product-share product-dialog-share" type="button" onclick="shareProduct('+p.id+')">Compartilhar pelo WhatsApp</button>';
   const dialog=document.getElementById('productDialog');dialog.classList.add('open');dialog.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
 }
 function closeProductDetails(){const dialog=document.getElementById('productDialog');if(!dialog)return;dialog.classList.remove('open');dialog.setAttribute('aria-hidden','true');document.body.style.overflow='';}
 document.addEventListener('keydown',event=>{if(event.key==='Escape')closeProductDetails()});
 
-function add(id,button){cart[id]=(cart[id]||0)+1;persist();renderCart();const cartButton=document.querySelector('.carttoggle');if(cartButton){cartButton.classList.remove('bump');void cartButton.offsetWidth;cartButton.classList.add('bump');}const img=button&&button.closest('.product')&&button.closest('.product').querySelector('img');if(img&&cartButton){const a=img.getBoundingClientRect(),b=cartButton.getBoundingClientRect(),fly=img.cloneNode();fly.className='fly-photo';fly.style.left=a.left+'px';fly.style.top=a.top+'px';fly.style.width=Math.min(a.width,78)+'px';fly.style.height=Math.min(a.height,78)+'px';document.body.appendChild(fly);requestAnimationFrame(()=>{fly.style.transform='translate('+(b.left-a.left+b.width/2-a.width/2)+'px,'+(b.top-a.top+b.height/2-a.height/2)+'px) scale(.18) rotate(18deg)';fly.style.opacity='.25';});setTimeout(()=>fly.remove(),760);}}
+function add(id,button){const product=products.find(p=>String(p.id)===String(id));if(!product||product.available===false){alert('Este produto está indisponível no momento.');return;}cart[id]=(cart[id]||0)+1;persist();renderCart();const cartButton=document.querySelector('.carttoggle');if(cartButton){cartButton.classList.remove('bump');void cartButton.offsetWidth;cartButton.classList.add('bump');}const img=button&&button.closest('.product')&&button.closest('.product').querySelector('img');if(img&&cartButton){const a=img.getBoundingClientRect(),b=cartButton.getBoundingClientRect(),fly=img.cloneNode();fly.className='fly-photo';fly.style.left=a.left+'px';fly.style.top=a.top+'px';fly.style.width=Math.min(a.width,78)+'px';fly.style.height=Math.min(a.height,78)+'px';document.body.appendChild(fly);requestAnimationFrame(()=>{fly.style.transform='translate('+(b.left-a.left+b.width/2-a.width/2)+'px,'+(b.top-a.top+b.height/2-a.height/2)+'px) scale(.18) rotate(18deg)';fly.style.opacity='.25';});setTimeout(()=>fly.remove(),760);}}
 
 function change(id,d) {
+  const product=products.find(p=>String(p.id)===String(id));
+  if(d>0&&(!product||product.available===false)){alert('Este produto está indisponível no momento.');return;}
   cart[id]=(cart[id]||0)+d;
   if(cart[id]<=0) delete cart[id];
   persist();
@@ -980,7 +984,9 @@ function renderCart() {
   const items=ids.map(id=>({
     p:products.find(x=>x.id==id),
     q:cart[id]
-  })).filter(x=>x.p);
+  })).filter(x=>x.p&&x.p.available!==false);
+  Object.keys(cart).forEach(id=>{const p=products.find(x=>String(x.id)===String(id));if(!p||p.available===false)delete cart[id];});
+  persist();
 
   document.getElementById('cartItems').innerHTML=items.length
     ? items.map(x=>`
