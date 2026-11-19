@@ -643,6 +643,25 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   <label>Seu nome</label>
   <input id="customer" class="field" placeholder="Como podemos chamar você?">
 
+  <label for="deliveryMethod">Como deseja receber?</label>
+  <select id="deliveryMethod" class="field" onchange="toggleDeliveryAddress(this.value)">
+    <option value="">Selecione uma opção</option>
+    <option value="Entrega em domicílio">Entrega em domicílio (com frete)</option>
+    <option value="Retirada na loja">Retirada na loja</option>
+  </select>
+
+  <div id="deliveryAddressWrap" style="display:none">
+    <label for="deliveryAddress">Endereço para entrega</label>
+    <textarea id="deliveryAddress" class="field" rows="2" placeholder="Rua, número, bairro e ponto de referência"></textarea>
+  </div>
+
+  <label for="paymentMethod">Forma de pagamento</label>
+  <select id="paymentMethod" class="field">
+    <option value="">Selecione uma opção</option>
+    <option value="Pix">Pix</option>
+    <option value="Dinheiro em espécie">Dinheiro em espécie</option>
+  </select>
+
   <label>Observações / personalização</label>
   <textarea id="notes" class="field" rows="3"
     placeholder="Cores, mensagem do cartão, data desejada..."></textarea>
@@ -908,6 +927,11 @@ function toggleCart() {
   renderCart();
 }
 
+function toggleDeliveryAddress(value){
+  const wrap=document.getElementById('deliveryAddressWrap');
+  if(wrap)wrap.style.display=value==='Entrega em domicílio'?'block':'none';
+}
+
 function checkout() {
   const ids=Object.keys(cart);
 
@@ -915,6 +939,13 @@ function checkout() {
     alert('Adicione pelo menos um produto ao carrinho.');
     return;
   }
+
+  const deliveryMethod=document.getElementById('deliveryMethod').value;
+  const deliveryAddress=document.getElementById('deliveryAddress').value.trim();
+  const paymentMethod=document.getElementById('paymentMethod').value;
+  if(!deliveryMethod){alert('Selecione entrega em domicílio ou retirada na loja.');return;}
+  if(deliveryMethod==='Entrega em domicílio'&&!deliveryAddress){alert('Informe o endereço para entrega.');return;}
+  if(!paymentMethod){alert('Selecione a forma de pagamento.');return;}
 
   const phone=(settings.phone||'').replace(/\D/g,'');
 
@@ -960,8 +991,9 @@ function checkout() {
     '📝 *Detalhes e personalização:* '+(document.getElementById('notes').value||'Nenhuma'),
     '',
     '📅 *Prazo para encomendas:* '+settings.lead+'.',
-    '🚗 *Entrega:* em domicílio com cobrança de frete ou retirada na loja.',
-    '💳 *Pagamento:* Pix ou dinheiro em espécie.',
+    '🚗 *Forma de recebimento:* '+deliveryMethod,
+    ...(deliveryMethod==='Entrega em domicílio'?['📍 *Endereço:* '+deliveryAddress]:[]),
+    '💳 *Forma de pagamento:* '+paymentMethod,
     '',
     '💌 Poderiam, por favor, confirmar o valor final, o frete e a disponibilidade?',
     '',
