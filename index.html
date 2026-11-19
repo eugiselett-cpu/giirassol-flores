@@ -605,6 +605,16 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .promotion-prices{font-size:13px;line-height:1.5;color:var(--green)}
 .promotion-card .add{margin-top:auto}
 @media(max-width:700px){.promotions-section{padding:0 12px;margin-bottom:18px}.promotions-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.promotion-card{border-radius:16px}.promotion-card img,.promotion-card .noimage{height:auto;aspect-ratio:1/1}.promotion-card-body{padding:9px}.promotion-card-name{font-size:13px}}
+
+/* Área de favoritos e compartilhamento */
+.favorites-tools{display:none;max-width:1120px;margin:0 auto 16px;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:var(--paper);align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.favorites-tools.visible{display:flex}
+.favorites-tools-copy{font-size:14px;color:var(--ink);font-weight:700}
+.favorites-tools-copy small{display:block;margin-top:4px;color:var(--muted);font-size:12px;font-weight:400}
+.favorites-tools-actions{display:flex;gap:8px;flex-wrap:wrap}
+.favorites-tools button{border:0;border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer;background:var(--green);color:#fff}
+.favorites-tools button.secondary{background:#f0e6cf;color:#5e543f}
+@media(max-width:700px){.favorites-tools{margin:0 12px 14px;padding:12px;gap:10px}.favorites-tools-actions{width:100%}.favorites-tools-actions button{flex:1;font-size:12px;padding:11px 8px}}
 </style>
 </head>
 
@@ -646,6 +656,7 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 </section>
 <main class="wrap">
   <p class="intro">Escolha seus favoritos e monte seu presente especial.</p>
+  <section class="favorites-tools" id="favoritesTools" aria-live="polite"><div class="favorites-tools-copy" id="favoritesToolsCopy">Meus favoritos<small>Seus produtos salvos ficam reunidos aqui.</small></div><div class="favorites-tools-actions"><button class="secondary" type="button" onclick="showAllProducts()">← Ver catálogo</button><button type="button" onclick="shareFavorites()">Compartilhar pelo WhatsApp</button></div></section>
   <section class="grid" id="products"></section>
 </main>
 
@@ -889,6 +900,7 @@ function renderPromotions(term){
   `).join("");
 }
 function renderProducts() {
+  updateFavoritesTools();
   const term=String(document.getElementById('mobileSearchInput')?.value||'').trim().toLocaleLowerCase('pt-BR');
   renderPromotions(term);
   const list=products.filter(p=>{
@@ -996,7 +1008,10 @@ function toggleSearch(){const box=document.getElementById('mobileSearch');if(!bo
 function searchProducts(value){renderProducts()}
 function contactStore(){const phone=(settings.phone||'').replace(/\D/g,'');if(phone)window.open('https://wa.me/'+phone,'_blank');else document.querySelector('.footer')?.scrollIntoView({behavior:'smooth'})}
 function toggleFavorite(id,button){id=String(id);favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem('gf_favorites',JSON.stringify(favorites));if(favoritesOnly){renderProducts();return;}if(button)button.classList.toggle('is-favorite',favorites.includes(id))}
-function showFavorites(){favoritesOnly=true;renderProducts();toggleMobileMenu(false);document.getElementById('products').scrollIntoView({behavior:'smooth',block:'start'})}
+function updateFavoritesTools(){const tools=document.getElementById('favoritesTools'),copy=document.getElementById('favoritesToolsCopy');if(!tools||!copy)return;const saved=products.filter(p=>favorites.includes(String(p.id)));tools.classList.toggle('visible',favoritesOnly);copy.innerHTML='Meus favoritos <small>'+saved.length+' '+(saved.length===1?'produto salvo':'produtos salvos')+' nesta lista.</small>';}
+function showFavorites(){active='Todos';favoritesOnly=true;renderTabs();renderProducts();toggleMobileMenu(false);document.getElementById('products').scrollIntoView({behavior:'smooth',block:'start'})}
+function showAllProducts(){favoritesOnly=false;active='Todos';renderTabs();renderProducts();document.getElementById('products').scrollIntoView({behavior:'smooth',block:'start'})}
+function shareFavorites(){const saved=products.filter(p=>favorites.includes(String(p.id)));if(!saved.length){alert('Salve pelo menos um produto nos favoritos antes de compartilhar.');return;}const lines=['🌻 *Minha lista de favoritos — Giirassol Flores*','',...saved.map((p,i)=>(i+1)+'. '+p.name+' ('+p.category+')'),'','Separei estas inspirações no catálogo da Giirassol Flores: '+window.location.origin+window.location.pathname];const phone=(settings.phone||'').replace(/\\D/g,'');const url='https://wa.me/'+phone+'?text='+encodeURIComponent(lines.join('\\n'));window.open(url,'_blank');}
 function toggleCart() {
   document.getElementById('cart').classList.toggle('open');
   renderCart();
