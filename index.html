@@ -621,7 +621,7 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .order-lead-notice{margin:10px 0 14px;padding:11px 12px;border-radius:10px;background:#f7f0df;color:#665638;line-height:1.5;font-size:12px}
 .order-lead-notice strong{color:var(--green)}
  .unavailable-label{display:block;text-align:center;background:#f2e8e3;color:#8b5146;border-radius:9px;padding:10px 8px;font-size:12px;font-weight:700;margin-top:auto}
-</style>
+\n.cart-color-options{grid-column:1/-1;padding:3px 0 7px 67px}.cart-color-title{font-size:12px;font-weight:700;color:#665638;margin:2px 0 7px}.color-tone-list{display:flex;flex-wrap:wrap;gap:6px}.color-tone{border:1px solid #e5d9c4;border-radius:18px;background:#fffaf1;color:#665638;padding:7px 9px;font-size:11px;cursor:pointer}.color-tone.selected{background:#687c52;border-color:#687c52;color:#fff}.cart-color-custom{width:100%;min-height:58px;resize:vertical;padding:9px;border:1px solid #ddd3bd;border-radius:9px;font:12px Arial,sans-serif;margin-top:8px}.cart-color-hint{font-size:10px;color:#877d6b;margin-top:5px}@media(max-width:700px){.cart-color-options{padding-left:0}}\n</style>
 </head>
 
 <body>
@@ -855,6 +855,12 @@ let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
 if(!settings.phone) settings.phone='5586981748569';
 
 let cart = JSON.parse(localStorage.getItem('gf_cart') || '{}');
+let cartColors = JSON.parse(localStorage.getItem('gf_cart_colors') || '{}');
+const flowerColorCategories=['Flores','Flores especiais','Buquês'];
+const flowerColorTones=['Tons de vermelho','Tons de rosa','Tons de azul','Tons de lilás e roxo','Tons de amarelo','Tons claros e branco','Tons de laranja','Tons de verde'];
+function saveCartColors(){localStorage.setItem('gf_cart_colors',JSON.stringify(cartColors));}
+function toggleColorTone(id,tone){const current=cartColors[id]||{tones:[],custom:''};current.tones=current.tones.includes(tone)?current.tones.filter(x=>x!==tone):[...current.tones,tone];cartColors[id]=current;saveCartColors();renderCart();}
+function updateCustomColor(id,value){const current=cartColors[id]||{tones:[],custom:''};current.custom=value;cartColors[id]=current;saveCartColors();}
 let active = 'Todos';
 let favoritesOnly=false;let favorites=JSON.parse(localStorage.getItem('gf_favorites')||'[]');
 
@@ -975,6 +981,8 @@ function change(id,d) {
 
 function removeItem(id) {
   delete cart[id];
+  delete cartColors[id];
+  saveCartColors();
   persist();
   renderCart();
 }
@@ -1008,6 +1016,12 @@ function renderCart() {
           ${x.q}
           <button onclick="change(${x.p.id},1)">+</button>
         </div>
+        ${flowerColorCategories.includes(x.p.category)?`<div class="cart-color-options">
+          <div class="cart-color-title">🎨 Cores desejadas para este produto</div>
+          <div class="color-tone-list">${flowerColorTones.map(tone=>`<button type="button" class="color-tone ${(cartColors[x.p.id]?.tones||[]).includes(tone)?'selected':''}" aria-pressed="${(cartColors[x.p.id]?.tones||[]).includes(tone)}" onclick="toggleColorTone('${x.p.id}','${tone}')">${tone}</button>`).join('')}</div>
+          <textarea class="cart-color-custom" maxlength="300" placeholder="Ou escreva as cores que prefere (ex.: rosa-claro com branco e detalhes em lilás)" oninput="updateCustomColor('${x.p.id}',this.value)">${escapeProductText(cartColors[x.p.id]?.custom||'')}</textarea>
+          <div class="cart-color-hint">Você pode selecionar mais de um tom e também escrever uma combinação. A preferência será enviada junto ao pedido.</div>
+        </div>`:''}
       </div>
     `).join('')
     : '<p class="notice">Seu carrinho está vazio.</p>';
@@ -1082,6 +1096,11 @@ function checkout() {
       lines.push('',(cat==='Flores'?'🌷':cat==='Flores especiais'?'💐':cat==='Buquês'?'💐':cat==='Adicionais'?'🎀':'🧸')+' *'+cat.toUpperCase()+'*');
       items.forEach(x=>{
         lines.push(`- ${x.q}x ${x.p.name}${x.p.price!==null&&x.p.price!==''&&x.p.price!==undefined?' — '+money(x.p.promo_active&&x.p.promo_price!=null?x.p.promo_price:x.p.price)+' cada':''}`);
+        if(flowerColorCategories.includes(x.p.category)){
+          const preference=cartColors[x.p.id]||{};
+          if((preference.tones||[]).length)lines.push('  🎨 Tons: '+preference.tones.join(', '));
+          if((preference.custom||'').trim())lines.push('  ✍️ Cores personalizadas: '+preference.custom.trim());
+        }
       });
     }
   });
