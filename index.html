@@ -617,6 +617,9 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 @media(max-width:700px){.favorites-tools{margin:0 12px 14px;padding:12px;gap:10px}.favorites-tools-actions{width:100%}.favorites-tools-actions button{flex:1;font-size:12px;padding:11px 8px}}
 
 .product-share{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--green);padding:9px 8px;font-size:12px;font-weight:700;cursor:pointer}.product-share svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.product-share:active{transform:scale(.98)}
+
+.order-lead-notice{margin:10px 0 14px;padding:11px 12px;border-radius:10px;background:#f7f0df;color:#665638;line-height:1.5;font-size:12px}
+.order-lead-notice strong{color:var(--green)}
 </style>
 </head>
 
@@ -693,6 +696,8 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
     <h3>Seu pedido</h3>
     <button class="btn secondary" onclick="toggleCart()">Fechar</button>
   </div>
+
+  <p class="notice order-lead-notice" id="cartLeadNotice">🌻 Nossas encomendas precisam ser feitas com antecedência. Consulte o prazo antes de finalizar.</p>
 
   <div id="cartItems"></div>
 
@@ -969,6 +974,7 @@ function removeItem(id) {
 }
 
 function renderCart() {
+  const leadNotice=document.getElementById('cartLeadNotice');if(leadNotice)leadNotice.innerHTML='🌻 Nossas encomendas precisam ser feitas com <strong>'+String(settings.lead||'2 a 7 dias de antecedência')+'</strong>.';
   const ids=Object.keys(cart);
 
   const items=ids.map(id=>({
@@ -1084,7 +1090,7 @@ function checkout() {
     '',
     '📝 *Detalhes e personalização:* '+(document.getElementById('notes').value||'Nenhuma'),
     '',
-    '📅 *Prazo para encomendas:* '+settings.lead+'.',
+    '🌻 *Antecedência para encomendas:* '+settings.lead+'. Por favor, considere esse prazo ao escolher a data desejada.',
     '🚗 *Forma de recebimento:* '+deliveryMethod,
     ...(deliveryMethod==='Entrega em domicílio'?['📍 *Endereço:* '+deliveryAddress]:[]),
     '💳 *Forma de pagamento:* '+paymentMethod,
