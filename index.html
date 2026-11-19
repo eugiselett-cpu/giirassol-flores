@@ -947,6 +947,7 @@ function renderProducts() {
   `).join('');
 }
 
+function escapeProductText(value){return String(value??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/'/g,'&#39;');}
 function openProductDetails(id){
   const p=products.find(x=>String(x.id)===String(id));if(!p)return;
   const hasPrice=p.price!==null&&p.price!==''&&p.price!==undefined;
@@ -954,7 +955,8 @@ function openProductDetails(id){
   const imageHtml=p.image?'<img class="product-dialog-image" src="'+p.image+'" alt="'+p.name+'">':'<div class="noimage product-dialog-image">Foto a adicionar</div>';
   const note=(p.category==='Flores'||p.category==='Flores especiais')?'O valor desta peça é confirmado pelo atendimento.':'Consulte a disponibilidade pelo atendimento.';
   const availabilityHtml=p.available===false?'<p class="unavailable-label">Indisponível no momento</p>':'<button class="product-dialog-add" type="button" onclick="add('+p.id+',null);closeProductDetails()">Adicionar ao carrinho</button>';
-  document.getElementById('productDialogContent').innerHTML=imageHtml+'<h2 class="product-dialog-name" id="productDialogName">'+p.name+'</h2><div class="product-dialog-category">'+p.category+'</div><div class="product-dialog-price">'+priceHtml+'</div><p class="product-dialog-note">'+note+' Encomendas com '+settings.lead+'.</p>'+availabilityHtml+'<button class="product-share product-dialog-share" type="button" onclick="shareProduct('+p.id+')">Compartilhar pelo WhatsApp</button>';
+  const descriptionHtml=p.description?'<div class="product-dialog-description">'+escapeProductText(p.description).replace(/\n/g,'<br>')+'</div>':'';
+  document.getElementById('productDialogContent').innerHTML=imageHtml+'<h2 class="product-dialog-name" id="productDialogName">'+p.name+'</h2><div class="product-dialog-category">'+p.category+'</div><div class="product-dialog-price">'+priceHtml+'</div>'+descriptionHtml+'<p class="product-dialog-note">'+note+' Encomendas com '+settings.lead+'.</p>'+availabilityHtml+'<button class="product-share product-dialog-share" type="button" onclick="shareProduct('+p.id+')">Compartilhar pelo WhatsApp</button>';
   const dialog=document.getElementById('productDialog');dialog.classList.add('open');dialog.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
 }
 function closeProductDetails(){const dialog=document.getElementById('productDialog');if(!dialog)return;dialog.classList.remove('open');dialog.setAttribute('aria-hidden','true');document.body.style.overflow='';}
