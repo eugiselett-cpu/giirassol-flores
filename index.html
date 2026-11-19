@@ -857,7 +857,7 @@ if(!settings.phone) settings.phone='5586981748569';
 
 let cart = JSON.parse(localStorage.getItem('gf_cart') || '{}');
 let cartColors = JSON.parse(localStorage.getItem('gf_cart_colors') || '{}');
-const flowerColorCategories=['Flores','Flores especiais','Buquês'];
+const flowerColorCategories=['Buquês'];
 const flowerColorTones=['Tons de vermelho','Tons de rosa','Tons de azul','Tons de lilás e roxo','Tons de amarelo','Tons claros e branco','Tons de laranja','Tons de verde'];
 function saveCartColors(){localStorage.setItem('gf_cart_colors',JSON.stringify(cartColors));}
 function toggleColorTone(id,tone){const current=cartColors[id]||{tones:[],custom:''};current.tones=current.tones.includes(tone)?current.tones.filter(x=>x!==tone):[...current.tones,tone];cartColors[id]=current;saveCartColors();renderCart();}
@@ -1017,10 +1017,10 @@ function renderCart() {
           ${x.q}
           <button onclick="change(${x.p.id},1)">+</button>
         </div>
-        ${flowerColorCategories.includes(x.p.category)?`<div class="cart-color-options">
-          <div class="cart-color-title">🎨 Cores desejadas para este produto</div>
+        ${(x.p.category==='Buquês'&&x.p.allow_bouquet_color_choice===true)?`<div class="cart-color-options">
+          <div class="cart-color-title">🎨 Cor de preferência do buquê</div>
           <div class="color-tone-list">${flowerColorTones.map(tone=>`<button type="button" class="color-tone ${(cartColors[x.p.id]?.tones||[]).includes(tone)?'selected':''}" aria-pressed="${(cartColors[x.p.id]?.tones||[]).includes(tone)}" onclick="toggleColorTone('${x.p.id}','${tone}')">${tone}</button>`).join('')}</div>
-          <textarea class="cart-color-custom" maxlength="300" placeholder="Ou escreva as cores que prefere (ex.: rosa-claro com branco e detalhes em lilás)" oninput="updateCustomColor('${x.p.id}',this.value)">${escapeProductText(cartColors[x.p.id]?.custom||'')}</textarea>
+          <textarea class="cart-color-custom" maxlength="300" placeholder="Descreva a combinação de cores desejada para o buquê" oninput="updateCustomColor('${x.p.id}',this.value)">${escapeProductText(cartColors[x.p.id]?.custom||'')}</textarea>
           <div class="cart-color-hint">Você pode selecionar mais de um tom e também escrever uma combinação. A preferência será enviada junto ao pedido.</div>
         </div>`:''}
       </div>
@@ -1097,7 +1097,7 @@ function checkout() {
       lines.push('',(cat==='Flores'?'🌷':cat==='Flores especiais'?'💐':cat==='Buquês'?'💐':cat==='Adicionais'?'🎀':'🧸')+' *'+cat.toUpperCase()+'*');
       items.forEach(x=>{
         lines.push(`- ${x.q}x ${x.p.name}${x.p.price!==null&&x.p.price!==''&&x.p.price!==undefined?' — '+money(x.p.promo_active&&x.p.promo_price!=null?x.p.promo_price:x.p.price)+' cada':''}`);
-        if(flowerColorCategories.includes(x.p.category)){
+        if((x.p.category==='Buquês'&&x.p.allow_bouquet_color_choice===true)){
           const preference=cartColors[x.p.id]||{};
           if((preference.tones||[]).length)lines.push('  🎨 Tons: '+preference.tones.join(', '));
           if((preference.custom||'').trim())lines.push('  ✍️ Cores personalizadas: '+preference.custom.trim());
