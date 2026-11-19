@@ -545,6 +545,15 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .product-dialog-note{font-size:13px;line-height:1.55;color:var(--muted);margin:10px 0 16px}
 .product-dialog-add{width:100%;padding:13px;border:0;border-radius:11px;background:var(--green);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
 @media(max-width:700px){.detail-image-trigger img,.detail-image-trigger .noimage{height:auto;aspect-ratio:1/1}.product-dialog-card{padding:14px}.product-dialog-image{height:min(42vh,320px)}}
+/* Store information */
+.store-info{width:min(100% - 36px,1120px);margin:0 auto 34px;padding:22px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:18px}
+.store-info-title{margin:0 0 18px;text-align:center;font:clamp(21px,2.8vw,28px) Georgia,serif;color:var(--ink)}
+.store-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.store-info-item{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--cream);border-radius:13px}
+.store-info-icon{font-size:27px;line-height:1.2}
+.store-info-item h3{margin:0 0 6px;font-size:15px;color:var(--ink)}
+.store-info-item p{margin:0;font-size:13px;line-height:1.5;color:var(--muted)}
+@media(max-width:700px){.store-info{width:calc(100% - 24px);margin:0 auto 24px;padding:16px 12px;border-radius:16px}.store-info-grid{grid-template-columns:1fr;gap:9px}.store-info-item{padding:12px}.store-info-item h3{font-size:14px}.store-info-item p{font-size:13px}}
 /* Featured promotions */
 .promotions-section{max-width:1120px;margin:0 auto 24px;padding:0 18px;display:none}
 .promotions-section.visible{display:block}
@@ -601,6 +610,15 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   <p class="intro">Escolha seus favoritos e monte seu presente especial.</p>
   <section class="grid" id="products"></section>
 </main>
+
+<section class="store-info" id="storeInfo" aria-label="Informações da loja">
+  <h2 class="store-info-title">Informações da loja 🌻</h2>
+  <div class="store-info-grid">
+    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">📅</span><div><h3>Prazo para encomendas</h3><p>De 2 a 7 dias de antecedência.</p></div></article>
+    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">🚗</span><div><h3>Entrega ou retirada</h3><p>Entregamos em domicílio, com cobrança de frete, ou você pode retirar na loja.</p></div></article>
+    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">💳</span><div><h3>Formas de pagamento</h3><p>Pix ou dinheiro em espécie.</p></div></article>
+  </div>
+</section>
 
 <div class="cartbox">
   <button class="carttoggle" onclick="toggleCart()">
@@ -718,7 +736,7 @@ async function loadRemoteCatalog(){try{const results=await Promise.all([db.from(
 let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
   phone:'5586981748569',
   instagram:'',
-  lead:'4 a 7 dias de antecedência'
+  lead:'2 a 7 dias de antecedência'
 };
 
 if(!settings.phone) settings.phone='5586981748569';
@@ -942,8 +960,10 @@ function checkout() {
     '📝 *Detalhes e personalização:* '+(document.getElementById('notes').value||'Nenhuma'),
     '',
     '📅 *Prazo para encomendas:* '+settings.lead+'.',
+    '🚗 *Entrega:* em domicílio com cobrança de frete ou retirada na loja.',
+    '💳 *Pagamento:* Pix ou dinheiro em espécie.',
     '',
-    '💌 Poderiam, por favor, confirmar o valor final e a disponibilidade?',
+    '💌 Poderiam, por favor, confirmar o valor final, o frete e a disponibilidade?',
     '',
 
   );
