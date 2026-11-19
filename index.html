@@ -530,6 +530,21 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .theme-christmas .favorite-btn.is-favorite{color:#D4AF37}
 .theme-christmas .price,.theme-christmas .sale-tag{color:#C62828}
 .theme-christmas .footer{background:#0F5132;color:#FFF9F0}
+/* Product details dialog */
+.detail-image-trigger{display:block;width:100%;padding:0;border:0;background:transparent;cursor:pointer}
+.detail-image-trigger img,.detail-image-trigger .noimage{display:block;width:100%;height:190px;object-fit:contain;object-position:center;background:#fff;padding:8px}
+.pname-button{padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit;font-weight:700;cursor:pointer}
+.product-dialog{display:none;position:fixed;inset:0;z-index:70;background:#0008;align-items:center;justify-content:center;padding:18px}
+.product-dialog.open{display:flex}
+.product-dialog-card{position:relative;width:min(460px,100%);max-height:88vh;overflow:auto;background:var(--paper,#fff);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 16px 50px #0003}
+.product-dialog-close{position:absolute;right:12px;top:12px;width:38px;height:38px;border:0;border-radius:50%;background:#fffE;color:#333;font-size:24px;cursor:pointer;z-index:2}
+.product-dialog-image{width:100%;height:min(48vh,360px);object-fit:contain;background:#fff;border-radius:12px}
+.product-dialog-name{font:26px Georgia,serif;margin:15px 42px 6px 0;color:var(--ink)}
+.product-dialog-category{font-size:13px;color:var(--muted);margin-bottom:12px}
+.product-dialog-price{font-size:18px;font-weight:700;color:var(--green);margin:12px 0}
+.product-dialog-note{font-size:13px;line-height:1.55;color:var(--muted);margin:10px 0 16px}
+.product-dialog-add{width:100%;padding:13px;border:0;border-radius:11px;background:var(--green);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+@media(max-width:700px){.detail-image-trigger img,.detail-image-trigger .noimage{height:auto;aspect-ratio:1/1}.product-dialog-card{padding:14px}.product-dialog-image{height:min(42vh,320px)}}
 </style>
 </head>
 
@@ -609,6 +624,12 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
     Finalizar pedido pelo WhatsApp
   </button>
 </aside>
+<div class="product-dialog" id="productDialog" onclick="if(event.target===this)closeProductDetails()" aria-hidden="true">
+  <section class="product-dialog-card" role="dialog" aria-modal="true" aria-labelledby="productDialogName">
+    <button class="product-dialog-close" type="button" onclick="closeProductDetails()" aria-label="Fechar detalhes">×</button>
+    <div id="productDialogContent"></div>
+  </section>
+</div>
 
 <footer class="footer">
   <b>Giirassol Flores</b><br>
@@ -739,12 +760,14 @@ function renderProducts() {
   grid.innerHTML=list.map(p=>`
     <article class="product">
       <button class="favorite-btn ${favorites.includes(String(p.id))?'is-favorite':''}" type="button" onclick="toggleFavorite('${p.id}',this)" aria-label="Favoritar produto"><svg viewBox="0 0 24 24"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.8 4.8 0 0 1 12 6.4a4.8 4.8 0 0 1 8.8 2.4Z"/></svg></button>
-      ${p.image
-        ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
-        : `<div class="noimage">Foto a adicionar</div>`
-      }
+      <button class="detail-image-trigger" type="button" onclick="openProductDetails(${p.id})" aria-label="Ver detalhes de ${p.name}">
+        ${p.image
+          ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+          : `<div class="noimage">Foto a adicionar</div>`
+        }
+      </button>
       <div class="pbody">
-        <div class="pname">${p.name}</div>
+        <button class="pname-button" type="button" onclick="openProductDetails(${p.id})">${p.name}</button>
         <div class="price">${
           p.promo_active&&p.promo_price!=null?('<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br><b>'+money(p.promo_price)+'</b>'):((p.price!==null&&p.price!==''&&p.price!==undefined)?money(p.price):(p.category==='Flores'||p.category==='Flores especiais'?'':'Preço a cadastrar'))
         }</div>
@@ -753,6 +776,18 @@ function renderProducts() {
     </article>
   `).join('');
 }
+
+function openProductDetails(id){
+  const p=products.find(x=>String(x.id)===String(id));if(!p)return;
+  const hasPrice=p.price!==null&&p.price!==''&&p.price!==undefined;
+  const priceHtml=p.promo_active&&p.promo_price!=null?'<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br>'+money(p.promo_price):(hasPrice?money(p.price):'Valor a confirmar');
+  const imageHtml=p.image?'<img class="product-dialog-image" src="'+p.image+'" alt="'+p.name+'">':'<div class="noimage product-dialog-image">Foto a adicionar</div>';
+  const note=(p.category==='Flores'||p.category==='Flores especiais')?'O valor desta peça é confirmado pelo atendimento.':'Consulte a disponibilidade pelo atendimento.';
+  document.getElementById('productDialogContent').innerHTML=imageHtml+'<h2 class="product-dialog-name" id="productDialogName">'+p.name+'</h2><div class="product-dialog-category">'+p.category+'</div><div class="product-dialog-price">'+priceHtml+'</div><p class="product-dialog-note">'+note+' Encomendas com '+settings.lead+'.</p><button class="product-dialog-add" type="button" onclick="add('+p.id+',null);closeProductDetails()">Adicionar ao carrinho</button>';
+  const dialog=document.getElementById('productDialog');dialog.classList.add('open');dialog.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+}
+function closeProductDetails(){const dialog=document.getElementById('productDialog');if(!dialog)return;dialog.classList.remove('open');dialog.setAttribute('aria-hidden','true');document.body.style.overflow='';}
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeProductDetails()});
 
 function add(id,button){cart[id]=(cart[id]||0)+1;persist();renderCart();const cartButton=document.querySelector('.carttoggle');if(cartButton){cartButton.classList.remove('bump');void cartButton.offsetWidth;cartButton.classList.add('bump');}const img=button&&button.closest('.product')&&button.closest('.product').querySelector('img');if(img&&cartButton){const a=img.getBoundingClientRect(),b=cartButton.getBoundingClientRect(),fly=img.cloneNode();fly.className='fly-photo';fly.style.left=a.left+'px';fly.style.top=a.top+'px';fly.style.width=Math.min(a.width,78)+'px';fly.style.height=Math.min(a.height,78)+'px';document.body.appendChild(fly);requestAnimationFrame(()=>{fly.style.transform='translate('+(b.left-a.left+b.width/2-a.width/2)+'px,'+(b.top-a.top+b.height/2-a.height/2)+'px) scale(.18) rotate(18deg)';fly.style.opacity='.25';});setTimeout(()=>fly.remove(),760);}}
 
