@@ -545,6 +545,16 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .product-dialog-note{font-size:13px;line-height:1.55;color:var(--muted);margin:10px 0 16px}
 .product-dialog-add{width:100%;padding:13px;border:0;border-radius:11px;background:var(--green);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
 @media(max-width:700px){.detail-image-trigger img,.detail-image-trigger .noimage{height:auto;aspect-ratio:1/1}.product-dialog-card{padding:14px}.product-dialog-image{height:min(42vh,320px)}}
+/* Order confirmation */
+.order-confirmation{display:none;position:fixed;inset:0;z-index:90;background:#0008;align-items:center;justify-content:center;padding:16px}
+.order-confirmation.open{display:flex}
+.order-confirmation-card{width:min(520px,100%);max-height:88vh;overflow:auto;background:var(--paper,#fff);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 16px 50px #0003}
+.order-confirmation-card h2{font:25px Georgia,serif;margin:0 0 8px}
+.order-confirmation-card p{font-size:13px;color:var(--muted);line-height:1.5}
+.order-confirmation-preview{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--cream);border-radius:12px;padding:14px;font-size:13px;line-height:1.6;max-height:48vh;overflow:auto}
+.order-confirmation-actions{display:flex;gap:10px;margin-top:14px}
+.order-confirmation-actions button{flex:1;min-height:44px}
+@media(max-width:480px){.order-confirmation-card{padding:16px}.order-confirmation-actions{flex-direction:column}}
 /* Store information */
 .store-info{width:min(100% - 36px,1120px);margin:0 auto 34px;padding:22px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:18px}
 .store-info-title{margin:0 0 18px;text-align:center;font:clamp(21px,2.8vw,28px) Georgia,serif;color:var(--ink)}
@@ -678,6 +688,17 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
     Finalizar pedido pelo WhatsApp
   </button>
 </aside>
+<div class="order-confirmation" id="orderConfirmation" onclick="if(event.target===this)closeOrderConfirmation()" aria-hidden="true">
+  <section class="order-confirmation-card" role="dialog" aria-modal="true" aria-labelledby="orderConfirmationTitle">
+    <h2 id="orderConfirmationTitle">Revise seu pedido 🌻</h2>
+    <p>Confira os dados abaixo. Se estiver tudo certo, continue para enviar a mensagem pelo WhatsApp.</p>
+    <pre class="order-confirmation-preview" id="orderConfirmationPreview"></pre>
+    <div class="order-confirmation-actions">
+      <button class="btn secondary" type="button" onclick="closeOrderConfirmation()">Voltar e editar</button>
+      <button class="btn" type="button" onclick="confirmCheckout()">Enviar pelo WhatsApp</button>
+    </div>
+  </section>
+</div>
 <div class="product-dialog" id="productDialog" onclick="if(event.target===this)closeProductDetails()" aria-hidden="true">
   <section class="product-dialog-card" role="dialog" aria-modal="true" aria-labelledby="productDialogName">
     <button class="product-dialog-close" type="button" onclick="closeProductDetails()" aria-label="Fechar detalhes">×</button>
@@ -1000,10 +1021,25 @@ function checkout() {
 
   );
 
-  window.open(
-    'https://wa.me/'+phone+'?text='+encodeURIComponent(lines.join('\n')),
-    '_blank'
-  );
+  const message=lines.join('\n');
+  window.gfCheckoutUrl='https://wa.me/'+phone+'?text='+encodeURIComponent(message);
+  document.getElementById('orderConfirmationPreview').textContent=message;
+  const confirmation=document.getElementById('orderConfirmation');
+  confirmation.classList.add('open');
+  confirmation.setAttribute('aria-hidden','false');
+}
+
+function closeOrderConfirmation(){
+  const confirmation=document.getElementById('orderConfirmation');
+  if(!confirmation)return;
+  confirmation.classList.remove('open');
+  confirmation.setAttribute('aria-hidden','true');
+}
+
+function confirmCheckout(){
+  if(!window.gfCheckoutUrl)return;
+  window.open(window.gfCheckoutUrl,'_blank');
+  closeOrderConfirmation();
 }
 
 function renderFooter() {
