@@ -1425,7 +1425,6 @@ async function confirmCheckout(){
       delivery_address:deliveryMethod==='Entrega em domicílio'?document.getElementById('deliveryAddress').value.trim():null,
       payment_method:document.getElementById('paymentMethod').value,
       lead_time:settings.lead,
-      status:'recebido',
       tracking_code_short:trackingCode
     };
     const {error}=await db.from('orders').insert(payload);
