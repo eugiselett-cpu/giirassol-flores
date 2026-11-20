@@ -1465,7 +1465,7 @@ document.getElementById('customerReviewForm')?.addEventListener('submit',async e
       if(uploadError)throw uploadError;
       photoUrl=db.storage.from('product-images').getPublicUrl(uploadedPhotoPath).data.publicUrl;
     }
-    const {error}=await db.from('customer_reviews').insert({customer_name:name,rating,comment,photo_url:photoUrl,active:false});
+    const {error}=await db.from('customer_reviews').insert({customer_name:name,rating,comment,photo_url:photoUrl});
     if(error)throw error;
     form.reset();status.textContent='Obrigada! Sua avaliação foi enviada e aparecerá no site depois da aprovação da loja. 🌻';
   }catch(error){console.error(error);if(uploadedPhotoPath){try{const {error:cleanupError}=await db.storage.from('product-images').remove([uploadedPhotoPath]);if(cleanupError)console.warn('Não foi possível remover a foto temporária:',cleanupError);}catch(cleanupError){console.warn('Falha ao limpar a foto temporária:',cleanupError);}}status.textContent='Não foi possível enviar agora. Tente novamente em alguns instantes.';}
