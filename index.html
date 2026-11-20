@@ -717,6 +717,46 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 }
 @media(prefers-reduced-motion:reduce){.product,.detail-image-trigger img{transition:none}.product:hover{transform:none}}
 
+
+/* Purchase information: clear steps and practical details */
+.store-info{padding:clamp(20px,3vw,30px);background:linear-gradient(145deg,#fffefa 0%,var(--paper,#fff) 70%);box-shadow:0 8px 28px #66502a0b}
+.store-info-heading{max-width:680px;margin:0 auto 22px;text-align:center}
+.store-info-kicker{display:inline-block;margin-bottom:8px;color:#927536;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.store-info-title{margin:0 0 8px}
+.store-info-intro{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.store-info-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.store-info-item{position:relative;min-height:132px;padding:17px;background:#fffaf0;border:1px solid #f0e6d3;border-radius:15px;transition:transform .2s ease,border-color .2s ease}
+.store-info-item:hover{transform:translateY(-2px);border-color:#dcccaa}
+.store-info-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:12px;background:#f2e9d6;font-size:21px}
+.store-info-item h3{margin:2px 0 7px;font-size:14px}
+.store-info-item p{font-size:12px;line-height:1.6}
+.store-info-steps{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.store-info-steps-title{margin:0 0 13px;text-align:center;font:20px Georgia,serif;color:var(--green)}
+.store-info-steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.store-info-step{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:12px;background:#f8f5ed}
+.store-info-step-number{display:grid;place-items:center;flex:0 0 27px;width:27px;height:27px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:800}
+.store-info-step b{display:block;margin:1px 0 4px;font-size:12px;color:var(--ink)}
+.store-info-step span:last-child{display:block;color:var(--muted);font-size:11px;line-height:1.5}
+.store-info-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.store-info-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:11px 17px;border-radius:24px;background:var(--green);color:#fff;text-decoration:none;font-size:12px;font-weight:800}
+.store-info-actions a.secondary{background:#f0e6cf;color:#5e543f}
+@media(max-width:700px){
+ .store-info{padding:18px 13px}
+ .store-info-heading{margin-bottom:16px}
+ .store-info-grid{grid-template-columns:1fr;gap:8px}
+ .store-info-item{min-height:0;padding:12px;gap:10px}
+ .store-info-icon{width:36px;height:36px;flex-basis:36px;font-size:19px}
+ .store-info-item h3{font-size:13px}
+ .store-info-item p{font-size:12px}
+ .store-info-steps{margin-top:17px;padding-top:16px}
+ .store-info-steps-title{font-size:18px}
+ .store-info-steps-grid{grid-template-columns:1fr;gap:8px}
+ .store-info-step{padding:10px}
+ .store-info-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ .store-info-actions a{padding:10px 8px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.store-info-item{transition:none}.store-info-item:hover{transform:none}}
+
 </style>
 </head>
 
@@ -768,12 +808,28 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   <section class="grid" id="products"></section>
 </main>
 
-<section class="store-info" id="storeInfo" aria-label="Informações da loja">
-  <h2 class="store-info-title">Informações da loja 🌻</h2>
+<section class="store-info" id="storeInfo" aria-label="Como comprar na Giirassol Flores">
+  <div class="store-info-heading">
+    <span class="store-info-kicker">Tudo para sua encomenda</span>
+    <h2 class="store-info-title">Comprar na Giirassol é simples 🌻</h2>
+    <p class="store-info-intro">Escolha suas flores com carinho e fale com a gente para confirmar os detalhes do seu pedido.</p>
+  </div>
   <div class="store-info-grid">
-    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">📅</span><div><h3>Prazo para encomendas</h3><p>De 2 a 7 dias de antecedência.</p></div></article>
-    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">🚗</span><div><h3>Entrega ou retirada</h3><p>Entregamos em domicílio, com cobrança de frete, ou você pode retirar na loja.</p></div></article>
-    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">💳</span><div><h3>Formas de pagamento</h3><p>Pix ou dinheiro em espécie.</p></div></article>
+    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">📅</span><div><h3>Encomende com antecedência</h3><p id="storeLeadInfo">Consulte o prazo de produção antes de escolher a data desejada.</p></div></article>
+    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">🚗</span><div><h3>Escolha como receber</h3><p>Receba em domicílio, com cobrança de frete, ou escolha retirar na loja.</p></div></article>
+    <article class="store-info-item"><span class="store-info-icon" aria-hidden="true">💳</span><div><h3>Pagamento</h3><p>As formas disponíveis são Pix ou dinheiro em espécie.</p></div></article>
+  </div>
+  <div class="store-info-steps">
+    <h3 class="store-info-steps-title">Como fazer sua encomenda</h3>
+    <div class="store-info-steps-grid">
+      <div class="store-info-step"><span class="store-info-step-number">1</span><div><b>Escolha seus produtos</b><span>Adicione ao carrinho as flores e os presentes que deseja.</span></div></div>
+      <div class="store-info-step"><span class="store-info-step-number">2</span><div><b>Preencha os dados</b><span>Informe seu contato, forma de recebimento e pagamento.</span></div></div>
+      <div class="store-info-step"><span class="store-info-step-number">3</span><div><b>Confirme pelo WhatsApp</b><span>Enviaremos seu pedido para a loja confirmar disponibilidade, valor final e frete.</span></div></div>
+    </div>
+    <div class="store-info-actions">
+      <a href="#products">Ver produtos</a>
+      <a class="secondary" href="javascript:void(0)" onclick="contactStore()">Falar com a loja</a>
+    </div>
   </div>
 </section>
 
@@ -930,7 +986,7 @@ const initial = [
 
 let products = initial;
 function setupCarousel(){const track=document.getElementById('shortcuts'),wrap=track?.parentElement,prev=document.getElementById('carouselPrev'),next=document.getElementById('carouselNext');if(!track||!wrap)return;if(window.gfCarouselTimer)clearInterval(window.gfCarouselTimer);track.querySelectorAll('[data-clone="1"]').forEach(x=>x.remove());const originals=Array.from(track.children);let index=0;const count=originals.length;wrap.classList.toggle('has-overflow',count>3);if(count<=3){track.style.transform='translateX(0)';if(prev)prev.onclick=null;if(next)next.onclick=null;return;}originals.slice(0,3).forEach(node=>{const clone=node.cloneNode(true);clone.dataset.clone='1';track.appendChild(clone);});const gap=parseFloat(getComputedStyle(track).gap)||0;const step=()=>originals[0].getBoundingClientRect().width+gap;const move=()=>{track.style.transition='transform .65s cubic-bezier(.22,.75,.25,1)';track.style.transform='translateX(-'+(index*step())+'px)';};const advance=()=>{index++;move();if(index===count){setTimeout(()=>{track.style.transition='none';index=0;track.style.transform='translateX(0)';},680);}};if(prev)prev.onclick=()=>{index=(index-1+count)%count;move();};if(next)next.onclick=()=>{advance();};window.gfCarouselTimer=setInterval(advance,3200);wrap.onmouseenter=()=>clearInterval(window.gfCarouselTimer);wrap.onmouseleave=()=>{clearInterval(window.gfCarouselTimer);window.gfCarouselTimer=setInterval(advance,3200);};}
-async function loadRemoteCatalog(){try{const results=await Promise.all([db.from('products').select('*').eq('active',true).order('sort_order'),db.from('store_settings').select('*').eq('id',1).maybeSingle()]);const rows=results[0].data;const error=results[0].error;const store=results[1].data;if(error)throw error;if(rows&&rows.length)products=rows.map(p=>({...p,price:p.price==null?'':String(p.price)}));if(store){settings={...settings,...store,phone:store.whatsapp,instagram:store.instagram,lead:store.lead_time};const logo=document.getElementById('storeLogo');if(logo){if(store.logo_image){logo.src=store.logo_image;logo.style.display='block';}else{logo.style.display='none';}}[['decorHeaderLeft','decor_header_left'],['decorHeaderRight','decor_header_right']].forEach(([id,key])=>{const el=document.getElementById(id);if(!el)return;const url=store[key];if(url){el.src=url;el.style.cssText='display:block!important;visibility:visible!important;opacity:1!important;position:absolute!important;top:0!important;bottom:0!important;transform:none!important;width:clamp(112px,23vw,170px)!important;height:100%!important;object-fit:contain!important;object-position:center!important;image-rendering:auto!important;pointer-events:none!important;z-index:2!important;animation:none!important;';el.style.left=id==='decorHeaderLeft'?'0':'auto';el.style.right=id==='decorHeaderRight'?'0':'auto';}else{el.removeAttribute('src');el.style.display='none';}});document.documentElement.style.setProperty('--cream',store.theme_bg||'#fff9ef');document.documentElement.style.setProperty('--header-bg',store.theme_header||'#fff8e9');document.documentElement.style.setProperty('--paper',store.theme_surface||'#ffffff');document.documentElement.style.setProperty('--green',store.theme_primary||'#687c52');document.documentElement.style.setProperty('--yellow',store.theme_accent||'#f5e6b8');document.documentElement.style.setProperty('--ink',store.theme_text||'#4d473b');document.documentElement.style.setProperty('--muted',store.theme_secondary||'#877d6b');document.documentElement.style.setProperty('--details',store.theme_details||'#687c52');document.documentElement.style.setProperty('--gold',store.theme_accent||'#f5e6b8');document.documentElement.classList.toggle('theme-christmas',(store.theme_bg||'').toUpperCase()==='#C62828'||(store.theme_primary||'').toUpperCase()==='#C62828');const hi=document.getElementById('heroInner');if(hi){const heroFrame=hi.parentElement;hi.innerHTML=(store.hero_image?'<img class="hero-background" src="'+String(store.hero_image).replace(/"/g,'&quot;')+'" alt="">':'');if(heroFrame){let top=document.getElementById('decorHeroFrameTop'),bottom=document.getElementById('decorHeroFrameBottom');if(!top){top=document.createElement('img');top.id='decorHeroFrameTop';top.className='hero-frame-image hero-frame-top';top.alt='';top.setAttribute('aria-hidden','true');heroFrame.insertBefore(top,hi);}if(!bottom){bottom=document.createElement('img');bottom.id='decorHeroFrameBottom';bottom.className='hero-frame-image hero-frame-bottom';bottom.alt='';bottom.setAttribute('aria-hidden','true');heroFrame.insertBefore(bottom,hi.nextSibling);}[[top,store.decor_hero_left_top],[bottom,store.decor_hero_left_bottom]].forEach(([el,url])=>{if(url){el.src=url;el.style.display='block';}else{el.removeAttribute('src');el.style.display='none';}});}}const sc=document.getElementById('shortcuts');if(sc&&Array.isArray(store.shortcuts)){sc.innerHTML='';store.shortcuts.forEach(x=>{const src=typeof x==='string'?x:(x&&x.image);if(!src)return;const link=document.createElement('a');link.className='shortcut';link.href='#tabs';const img=document.createElement('img');img.src=src;img.alt='';link.appendChild(img);sc.appendChild(link);});setupCarousel();}}renderProducts();renderCart();renderFooter();}catch(err){console.warn('Catálogo remoto indisponível; usando catálogo local.',err);}}
+async function loadRemoteCatalog(){try{const results=await Promise.all([db.from('products').select('*').eq('active',true).order('sort_order'),db.from('store_settings').select('*').eq('id',1).maybeSingle()]);const rows=results[0].data;const error=results[0].error;const store=results[1].data;if(error)throw error;if(rows&&rows.length)products=rows.map(p=>({...p,price:p.price==null?'':String(p.price)}));if(store){settings={...settings,...store,phone:store.whatsapp,instagram:store.instagram,lead:store.lead_time};const leadInfo=document.getElementById('storeLeadInfo');if(leadInfo){const lead=String(store.lead_time||'').trim();leadInfo.textContent=lead?('Prazo informado pela loja: '+lead+'. Consulte a disponibilidade da data desejada pelo WhatsApp.'):'Consulte o prazo de produção e a disponibilidade da data desejada pelo WhatsApp.';}const logo=document.getElementById('storeLogo');if(logo){if(store.logo_image){logo.src=store.logo_image;logo.style.display='block';}else{logo.style.display='none';}}[['decorHeaderLeft','decor_header_left'],['decorHeaderRight','decor_header_right']].forEach(([id,key])=>{const el=document.getElementById(id);if(!el)return;const url=store[key];if(url){el.src=url;el.style.cssText='display:block!important;visibility:visible!important;opacity:1!important;position:absolute!important;top:0!important;bottom:0!important;transform:none!important;width:clamp(112px,23vw,170px)!important;height:100%!important;object-fit:contain!important;object-position:center!important;image-rendering:auto!important;pointer-events:none!important;z-index:2!important;animation:none!important;';el.style.left=id==='decorHeaderLeft'?'0':'auto';el.style.right=id==='decorHeaderRight'?'0':'auto';}else{el.removeAttribute('src');el.style.display='none';}});document.documentElement.style.setProperty('--cream',store.theme_bg||'#fff9ef');document.documentElement.style.setProperty('--header-bg',store.theme_header||'#fff8e9');document.documentElement.style.setProperty('--paper',store.theme_surface||'#ffffff');document.documentElement.style.setProperty('--green',store.theme_primary||'#687c52');document.documentElement.style.setProperty('--yellow',store.theme_accent||'#f5e6b8');document.documentElement.style.setProperty('--ink',store.theme_text||'#4d473b');document.documentElement.style.setProperty('--muted',store.theme_secondary||'#877d6b');document.documentElement.style.setProperty('--details',store.theme_details||'#687c52');document.documentElement.style.setProperty('--gold',store.theme_accent||'#f5e6b8');document.documentElement.classList.toggle('theme-christmas',(store.theme_bg||'').toUpperCase()==='#C62828'||(store.theme_primary||'').toUpperCase()==='#C62828');const hi=document.getElementById('heroInner');if(hi){const heroFrame=hi.parentElement;hi.innerHTML=(store.hero_image?'<img class="hero-background" src="'+String(store.hero_image).replace(/"/g,'&quot;')+'" alt="">':'');if(heroFrame){let top=document.getElementById('decorHeroFrameTop'),bottom=document.getElementById('decorHeroFrameBottom');if(!top){top=document.createElement('img');top.id='decorHeroFrameTop';top.className='hero-frame-image hero-frame-top';top.alt='';top.setAttribute('aria-hidden','true');heroFrame.insertBefore(top,hi);}if(!bottom){bottom=document.createElement('img');bottom.id='decorHeroFrameBottom';bottom.className='hero-frame-image hero-frame-bottom';bottom.alt='';bottom.setAttribute('aria-hidden','true');heroFrame.insertBefore(bottom,hi.nextSibling);}[[top,store.decor_hero_left_top],[bottom,store.decor_hero_left_bottom]].forEach(([el,url])=>{if(url){el.src=url;el.style.display='block';}else{el.removeAttribute('src');el.style.display='none';}});}}const sc=document.getElementById('shortcuts');if(sc&&Array.isArray(store.shortcuts)){sc.innerHTML='';store.shortcuts.forEach(x=>{const src=typeof x==='string'?x:(x&&x.image);if(!src)return;const link=document.createElement('a');link.className='shortcut';link.href='#tabs';const img=document.createElement('img');img.src=src;img.alt='';link.appendChild(img);sc.appendChild(link);});setupCarousel();}}renderProducts();renderCart();renderFooter();}catch(err){console.warn('Catálogo remoto indisponível; usando catálogo local.',err);}}
 
 let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
   phone:'5586981748569',
