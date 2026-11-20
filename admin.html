@@ -39,7 +39,19 @@ $("signupBtn").onclick=async()=>{const email=$("email").value.trim().toLowerCase
 $("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
 $("logout").onclick=()=>db.auth.signOut().then(()=>location.reload());
 async function loadAll(){await Promise.all([loadProducts(),loadSettings(),loadReviews(),loadOrders()])}
-$("refreshDashboard").onclick=()=>loadOrders();
+$("refreshDashboard").onclick=async()=>{
+ const btn=$("refreshDashboard"),label=btn.textContent;
+ btn.disabled=true;btn.textContent="Atualizando...";
+ $("dashboardUpdated").textContent="Buscando pedidos no banco...";
+ try{
+  const ok=await loadOrders();
+  if(ok)$("dashboardUpdated").textContent="Atualizado com sucesso às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  else $("dashboardUpdated").textContent="Não foi possível atualizar. Confira a lista de pedidos.";
+ }catch(err){
+  $("dashboardUpdated").textContent="Falha ao atualizar: "+(err&&err.message?err.message:"erro inesperado");
+ }
+ btn.disabled=false;btn.textContent=label;
+};
 async function loadProducts(){const {data,error}=await db.from("products").select("*").order("sort_order");if(error){alert("Erro ao carregar produtos: "+error.message);return}products=data||[];render()}
 let currentHeroImage="";let currentTiles=[];let currentLogoImage="";let pendingCarouselFiles=[];function renderCarouselAdmin(){const box=$("carouselAdminList");if(!box)return;box.innerHTML=currentTiles.map((url,i)=>'<div class="carousel-admin-item"><img src="'+esc(url)+'" alt="Foto do carrossel '+(i+1)+'"><div class="muted">Foto '+(i+1)+'</div><button type="button" class="btn danger removeCarousel" data-index="'+i+'">Remover</button></div>').join("");box.querySelectorAll(".removeCarousel").forEach(b=>b.onclick=()=>{currentTiles.splice(Number(b.dataset.index),1);renderCarouselAdmin()})}async function loadSettings(){const {data,error}=await db.from("store_settings").select("*").eq("id",1).maybeSingle();if(error)return;if(data){currentLogoImage=data.logo_image||"";setPreview("logoPreview",currentLogoImage);[["decorHeaderLeft","decor_header_left"],["decorHeaderRight","decor_header_right"],["decorHeroLeftTop","decor_hero_left_top"],["decorHeroLeftBottom","decor_hero_left_bottom"],["decorHeroRightTop","decor_hero_right_top"],["decorHeroRightBottom","decor_hero_right_bottom"]].forEach(([id,key])=>setPreview(id+"Preview",data[key]||""));currentHeroImage=data.hero_image||"";currentTiles=(Array.isArray(data.shortcuts)?data.shortcuts:[]).map(x=>typeof x==="string"?x:(x&&x.image)||"").filter(Boolean);setPreview("heroPreview",currentHeroImage);renderCarouselAdmin();$("whatsapp").value=data.whatsapp||"";$("instagram").value=data.instagram||"";$("lead").value=data.lead_time||"";$("themeBg").value=data.theme_bg||"#fff9ef";$("themeHeader").value=data.theme_header||"#fff8e9";$("themeSurface").value=data.theme_surface||"#ffffff";$("themePrimary").value=data.theme_primary||"#687c52";$("themeAccent").value=data.theme_accent||"#f5e6b8";$("themeText").value=data.theme_text||"#4d473b";$("themeDetails").value=data.theme_details||"#687c52";$("themeSecondary").value=data.theme_secondary||"#877d6b";window.updateThemeColorLabels&&window.updateThemeColorLabels()}}
 function render(){const term=$("search").value.toLowerCase();$("products").innerHTML=products.filter(p=>p.name.toLowerCase().includes(term)).map(p=>'<div class="product" data-id="'+p.id+'"><img src="'+(p.image||"")+'" onerror="this.style.opacity=.2" alt=""><div><b>'+esc(p.name)+'</b><div class="tag">'+esc(p.category)+'</div><input class="field name" value="'+esc(p.name)+'" aria-label="Nome do produto"><label>Descrição do produto</label><textarea class="field description" rows="3" maxlength="1200" placeholder="Detalhes, tamanho, cores, personalização...">'+esc(p.description||"")+'</textarea></div><div class="pricebox"><label>Preço (R$)</label><input class="field price" type="number" min="0" step=".01" value="'+(p.price??"")+'" placeholder="Sem preço"><label class="tag"><input class="promo" type="checkbox" '+(p.promo_active?"checked":"")+' > Em promoção</label><label>Preço promocional</label><input class="field promoPrice" type="number" min="0" step=".01" value="'+(p.promo_price??"")+'" placeholder="Com desconto"></div><div class="actions"><label class="tag"><input class="active" type="checkbox" '+(p.active?"checked":"")+'> Exibir no catálogo</label><label class="tag" style="display:block;margin:8px 0"><input class="available" type="checkbox" '+(p.available!==false?"checked":"")+'> Disponível para encomenda</label>'+(p.category==="Buquês"?'<label class="tag" style="display:block;margin:8px 0"><input class="bouquet-color" type="checkbox" '+(p.allow_bouquet_color_choice?"checked":"")+' > Permitir escolha de cores do buquê</label>':"")+(p.featured?'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox" checked> Produto em destaque</label>':'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox"> Produto em destaque</label>')+'<label class="btn light" style="display:block;text-align:center;margin:7px 0;cursor:pointer">Trocar foto<input class="photo hidden" type="file" accept="image/png,image/jpeg,image/webp"></label><button class="btn save" style="width:100%">Salvar</button></div></div>').join("")}
@@ -66,17 +78,18 @@ function renderOrderDashboard(data){
 }
 function moneyAdmin(value){return "R$ "+Number(value||0).toFixed(2).replace(".",",");}
 async function loadOrders(){
- const box=$("ordersAdminList");if(!box)return;
+ const box=$("ordersAdminList");if(!box)return false;
  const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false}).limit(1000);
+ if(error){box.innerHTML="<p class='muted'>Não foi possível carregar pedidos: "+esc(error.message)+"</p>";$("dashboardUpdated").textContent="Falha ao atualizar os indicadores.";return false;}
  renderOrderDashboard(data||[]);
- if(error){box.innerHTML="<p class='muted'>Não foi possível carregar pedidos: "+esc(error.message)+"</p>";return;}
- if(!data||!data.length){box.innerHTML="<p class='muted'>Ainda não há pedidos registrados.</p>";return;}
+ if(!data||!data.length){box.innerHTML="<p class='muted'>Ainda não há pedidos registrados.</p>";return true;}
  box.innerHTML=data.map(o=>{
   const items=Array.isArray(o.items)?o.items:[];
   const lines=items.map(x=>"<li>"+esc(x.quantity)+" × "+esc(x.name)+(x.unit_price!==null&&x.unit_price!==undefined?" — "+moneyAdmin(x.unit_price):" — valor a confirmar")+"</li>").join("");
   const opts=orderStatuses.map(st=>"<option value='"+st[0]+"' "+(o.status===st[0]?"selected":"")+">"+st[1]+"</option>").join("");
   return "<article class='card order-admin-card' data-order-id='"+esc(o.id)+"' style='padding:14px;margin:12px 0'><div style='display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap'><b>Pedido #"+esc(o.order_number)+"</b><span class='muted'>"+new Date(o.created_at).toLocaleString("pt-BR")+"</span></div><p><b>"+esc(o.customer_name)+"</b></p><ul>"+lines+"</ul><p class='muted'>Total parcial: "+moneyAdmin(o.partial_total)+" · "+esc(o.delivery_method)+" · "+esc(o.payment_method)+(o.delivery_address?" · "+esc(o.delivery_address):"")+"</p>"+(o.notes?"<p><b>Observações:</b> "+esc(o.notes)+"</p>":"")+(o.color_preference?"<p><b>Preferência de cores:</b> "+esc(JSON.stringify(o.color_preference))+"</p>":"")+"<label>Status do pedido</label><select class='field order-status'>"+opts+"</select><label>Anotação interna (não aparece para a cliente)</label><textarea class='field order-internal-notes' rows='2' maxlength='1000'>"+esc(o.internal_notes||"")+"</textarea><button type='button' class='btn save-order'>Salvar andamento</button> <span class='muted order-save-msg'></span></article>";
  }).join("");
+ return true;
 }
 $("ordersAdminList").addEventListener("click",async e=>{
  const btn=e.target.closest(".save-order");if(!btn)return;
