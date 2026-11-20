@@ -1220,7 +1220,7 @@ function renderCart() {
     s+((x.p.price!==null&&x.p.price!==''&&x.p.price!==undefined)?(x.p.promo_active&&x.p.promo_price!=null?Number(x.p.promo_price):Number(x.p.price))*x.q:0),0
   );
 
-  const discount=appliedCoupon?Math.min(total,Number(appliedCoupon.discount_amount)||0):0;
+  const discount=appliedCoupon?Math.min(total,Number((appliedCoupon.discount_type==='percentage'?total*appliedCoupon.discount_value/100:appliedCoupon.discount_value).toFixed(2))):0;
   document.getElementById('total').innerHTML = 'Total dos itens com preço: '+money(total)+(discount?' <div style="color:#287344;margin-top:6px">Cupom '+escapeProductText(appliedCoupon.code)+': −'+money(discount)+'</div><div style="margin-top:4px">Total parcial com desconto: '+money(total-discount)+'</div>':'');
 }
 
@@ -1239,8 +1239,8 @@ async function applyStoreCoupon(){
   if(data.usage_limit!==null&&Number(data.usage_count)>=Number(data.usage_limit))throw new Error('Este cupom atingiu o limite de utilizações.');
   if(subtotal<Number(data.minimum_order_amount||0))throw new Error('O pedido mínimo para este cupom é '+money(data.minimum_order_amount)+'.');
   const amount=data.discount_type==='percentage'?Math.round(subtotal*Number(data.discount_value))/100:Math.min(subtotal,Number(data.discount_value));
-  appliedCoupon={code:data.code,discount_amount:Math.min(subtotal,Number((data.discount_type==='percentage'?subtotal*Number(data.discount_value)/100:data.discount_value).toFixed(2)))};
-  status.textContent='Cupom aplicado! Você economiza '+money(appliedCoupon.discount_amount)+'.';
+  appliedCoupon={code:data.code,discount_type:data.discount_type,discount_value:Number(data.discount_value)};
+  status.textContent='Cupom aplicado! Você economiza '+money(appliedCoupon.discount_type==='percentage'?subtotal*appliedCoupon.discount_value/100:Math.min(subtotal,appliedCoupon.discount_value))+'.';
   status.style.color='#287344';renderCart();
  }catch(e){appliedCoupon=null;status.textContent=e.message||'Não foi possível validar o cupom.';status.style.color='#a33';renderCart();}
 }
@@ -1320,7 +1320,7 @@ function checkout() {
     return s+(p&&p.price!==null&&p.price!==''&&p.price!==undefined?(p.promo_active&&p.promo_price!=null?Number(p.promo_price):Number(p.price))*cart[id]:0);
   },0);
 
-  const couponDiscount=appliedCoupon?Math.min(total,Number(appliedCoupon.discount_amount)||0):0;
+  const couponDiscount=appliedCoupon?Math.min(total,Number((appliedCoupon.discount_type==='percentage'?total*appliedCoupon.discount_value/100:appliedCoupon.discount_value).toFixed(2))):0;
   if(appliedCoupon){lines.push('','🎟️ *Cupom:* '+appliedCoupon.code,'💚 *Desconto:* −'+money(couponDiscount));}
   lines.push(
     '',
