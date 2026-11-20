@@ -34,6 +34,16 @@
 <p><button class="btn" id="saveCouponAdmin" type="button">Criar cupom</button> <span id="couponAdminMsg" class="muted" role="status" aria-live="polite"></span></p>
 <h3>Cupons cadastrados</h3><div id="couponAdminList"><p class="muted">Carregando cupons...</p></div>
 </div>
+<div class="card" id="loyaltyAdmin">
+<h2>Programa de fidelidade 🌻</h2>
+<p class="muted">A cada R$ 10,00 efetivamente recebidos em um pedido entregue e totalmente pago, a cliente ganha 1 ponto. Ao juntar 10 pontos, você pode gerar um cupom pessoal de R$ 5,00, válido por 30 dias e vinculado ao WhatsApp da cliente.</p>
+<div id="loyaltySummary" class="dashboard-grid"><div class="dashboard-stat"><span>Clientes participantes</span><strong>—</strong></div><div class="dashboard-stat"><span>Pontos em circulação</span><strong>—</strong></div></div>
+<h3>Resgatar pontos e gerar recompensa</h3>
+<div class="row"><div><label>WhatsApp da cliente (com DDD)</label><input id="loyaltyPhone" class="field" type="tel" placeholder="(DDD) 9XXXX-XXXX"></div><div><label>Pontos para resgatar (múltiplos de 10)</label><input id="loyaltyRedeemPoints" class="field" type="number" min="10" step="10" placeholder="Ex.: 10"></div></div>
+<p class="muted">Cada 10 pontos geram R$ 5,00 de desconto. O cupom será de uso único e só poderá ser utilizado com o mesmo número de WhatsApp.</p>
+<p><button class="btn" id="redeemLoyalty" type="button">Gerar cupom de recompensa</button> <span id="loyaltyMsg" class="muted" role="status" aria-live="polite"></span></p>
+<h3>Saldo de pontos das clientes</h3><div id="loyaltyBalances"><p class="muted">Carregando...</p></div>
+</div>
 <div class="card" id="reviewsAdmin">
 <h2>Avaliações de clientes</h2>
 <p class="muted">Cadastre somente depoimentos reais, com autorização da cliente. Marque “Exibir na loja” para publicar no site.</p>
@@ -59,6 +69,40 @@ $("signupBtn").onclick=async()=>{const email=$("email").value.trim().toLowerCase
 $("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
 $("logout").onclick=()=>db.auth.signOut().then(()=>location.reload());
 
+
+let loyaltyRows=[];
+function loyaltyPhoneKey(value){return String(value||"").replace(/[^0-9]/g,"");}
+function loyaltyBalances(){
+ const map={};
+ loyaltyRows.forEach(t=>{const phone=loyaltyPhoneKey(t.customer_phone);if(!phone)return;if(!map[phone])map[phone]={phone,name:t.customer_name||"Cliente",points:0};map[phone].points+=Number(t.points_delta)||0;if(t.created_at&&(!map[phone].last||t.created_at>map[phone].last))map[phone].last=t.created_at;});
+ return Object.values(map).filter(x=>x.points>0).sort((a,b)=>b.points-a.points);
+}
+async function loadLoyaltyAdmin(){
+ const box=$("loyaltyBalances");if(!box)return;
+ const {data,error}=await db.from("loyalty_transactions").select("*").order("created_at",{ascending:false}).limit(5000);
+ if(error){box.innerHTML='<p class="muted">Não foi possível carregar pontos: '+esc(error.message)+'</p>';return;}
+ loyaltyRows=data||[];const balances=loyaltyBalances(),points=balances.reduce((n,x)=>n+x.points,0);
+ $("loyaltySummary").innerHTML="<div class='dashboard-stat'><span>Clientes participantes</span><strong>"+balances.length+"</strong></div><div class='dashboard-stat'><span>Pontos em circulação</span><strong>"+points+"</strong></div>";
+ box.innerHTML=balances.length?balances.map(x=>"<div style='display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)'><div><b>"+esc(x.name)+"</b><div class='muted'>WhatsApp: "+esc(x.phone)+" · Última movimentação: "+(x.last?new Date(x.last).toLocaleDateString("pt-BR"):"—")+"</div></div><strong style='color:var(--green)'>"+x.points+" pontos · "+Math.floor(x.points/10)*5+" reais em recompensas</strong></div>").join(""):"<p class='muted'>Ainda não há pontos acumulados. Eles serão gerados quando um pedido estiver entregue e totalmente pago.</p>";
+}
+$("redeemLoyalty").onclick=async()=>{
+ const phone=loyaltyPhoneKey($("loyaltyPhone").value),points=Number($("loyaltyRedeemPoints").value);
+ if(phone.length<10){message("loyaltyMsg","Informe um WhatsApp válido com DDD.");return;}
+ if(!Number.isInteger(points)||points<10||points%10!==0){message("loyaltyMsg","O resgate deve ser de 10, 20, 30 pontos ou mais.");return;}
+ const balance=loyaltyBalances().find(x=>x.phone===phone);
+ if(!balance||balance.points<points){message("loyaltyMsg","Esta cliente não possui pontos suficientes. Saldo atual: "+(balance?balance.points:0)+".");return;}
+ const discount=(points/10)*5,code="GIIRA"+Math.random().toString(36).slice(2,8).toUpperCase();
+ const start=new Date(),end=new Date(start.getFullYear(),start.getMonth(),start.getDate()+30);
+ const dateKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+ const btn=$("redeemLoyalty");btn.disabled=true;message("loyaltyMsg","Gerando recompensa...");
+ const {error:couponError}=await db.from("coupons").insert({code,discount_type:"fixed",discount_value:discount,minimum_order_amount:0,starts_at:dateKey(start),ends_at:dateKey(end),usage_limit:1,customer_phone:phone});
+ if(couponError){btn.disabled=false;message("loyaltyMsg","Não foi possível gerar o cupom: "+couponError.message);return;}
+ const {error:ledgerError}=await db.from("loyalty_transactions").insert({customer_name:balance.name,customer_phone:phone,points_delta:-points,transaction_type:"redemption",description:"Resgate de "+points+" pontos por cupom "+code+" (R$ "+discount.toFixed(2)+")"});
+ if(ledgerError){await db.from("coupons").delete().eq("code",code);btn.disabled=false;message("loyaltyMsg","Falha ao registrar o resgate: "+ledgerError.message);return;}
+ $("loyaltyRedeemPoints").value="";$("loyaltyPhone").value="";message("loyaltyMsg","Cupom "+code+" gerado: R$ "+discount.toFixed(2).replace(".",",")+" de desconto. Válido por 30 dias e exclusivo do WhatsApp informado.");
+ btn.disabled=false;await Promise.all([loadLoyaltyAdmin(),loadCouponsAdmin()]);
+};
+
 async function loadCouponsAdmin(){
  const box=$("couponAdminList");if(!box)return;
  const {data,error}=await db.from("coupons").select("*").order("created_at",{ascending:false});
@@ -83,7 +127,7 @@ $("saveCouponAdmin").onclick=async()=>{
  $("couponMinimumAdmin").value="0";message("couponAdminMsg","Cupom criado com sucesso!");await loadCouponsAdmin();
 };
 
-async function loadAll(){await Promise.all([loadProducts(),loadSettings(),loadReviews(),loadOrders(),loadCouponsAdmin()])}
+async function loadAll(){await Promise.all([loadProducts(),loadSettings(),loadReviews(),loadOrders(),loadCouponsAdmin(),loadLoyaltyAdmin()])}
 $("refreshDashboard").onclick=async()=>{
  const btn=$("refreshDashboard"),label=btn.textContent;
  btn.disabled=true;btn.textContent="Atualizando...";
@@ -453,7 +497,7 @@ async function fetchAllRows(table){
 $("downloadFullBackup").onclick=async()=>{
  const btn=$("downloadFullBackup"),status=$("backupStatus");btn.disabled=true;status.textContent="Preparando backup completo...";
  try{
-  const names=["products","store_settings","customer_reviews","orders","order_events"];
+  const names=["products","store_settings","customer_reviews","orders","order_events","coupons","loyalty_transactions"];
   const backup={store:"Giirassol Flores",generated_at:new Date().toISOString(),format_version:1,tables:{}};
   for(const table of names){status.textContent="Incluindo "+table+"...";backup.tables[table]=await fetchAllRows(table);}
   const total=Object.values(backup.tables).reduce((sum,rows)=>sum+rows.length,0);
