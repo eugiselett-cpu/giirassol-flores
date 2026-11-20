@@ -58,14 +58,15 @@ function render(){const term=$("search").value.toLowerCase();$("products").inner
 
 const orderStatuses=[["recebido","Recebido"],["em_producao","Em produção"],["pronto","Pronto para retirada/entrega"],["entregue","Entregue"],["cancelado","Cancelado"]];
 function renderOrderDashboard(data){
- const orders=Array.isArray(data)?data:[];
+ const allOrders=Array.isArray(data)?data:[];
+ const orders=allOrders.filter(o=>o.status!=="cancelado");
  const pending=orders.filter(o=>!["entregue","cancelado"].includes(o.status)).length;
  const delivered=orders.filter(o=>o.status==="entregue");
  const revenue=orders.reduce((sum,o)=>sum+Number(o.amount_received||0),0);
  const paymentPending=orders.filter(o=>o.payment_status==="pendente").length;
  const now=new Date(),monthStart=new Date(now.getFullYear(),now.getMonth(),1);
  const monthOrders=orders.filter(o=>new Date(o.created_at)>=monthStart);
- const monthValue=monthOrders.filter(o=>o.status!=="cancelado").reduce((sum,o)=>sum+Number(o.partial_total||0),0);
+ const monthValue=monthOrders.reduce((sum,o)=>sum+Number(o.partial_total||0),0);
  $("metricOrders").textContent=orders.length;
  $("metricPending").textContent=pending;
  $("metricDelivered").textContent=delivered.length;
@@ -92,14 +93,27 @@ async function loadOrders(){
   return "<article class='card order-admin-card' data-order-id='"+esc(o.id)+"' data-payment-date='"+esc(o.payment_received_at||"")+"' style='padding:14px;margin:12px 0'><div style='display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap'><b>Pedido #"+esc(o.order_number)+"</b><span class='muted'>"+new Date(o.created_at).toLocaleString("pt-BR")+"</span></div><p><b>"+esc(o.customer_name)+"</b></p><ul>"+lines+"</ul><p class='muted'>Total parcial: "+moneyAdmin(o.partial_total)+" · "+esc(o.delivery_method)+" · "+esc(o.payment_method)+(o.delivery_address?" · "+esc(o.delivery_address):"")+"</p>"+(o.notes?"<p><b>Observações:</b> "+esc(o.notes)+"</p>":"")+(o.color_preference?"<p><b>Preferência de cores:</b> "+esc(JSON.stringify(o.color_preference))+"</p>":"")+"<label>Status do pedido</label><select class='field order-status'>"+opts+"</select><hr><h4 style='margin:12px 0 6px'>Controle de pagamento</h4><label>Situação do pagamento</label><select class='field payment-status'>"+payOpts+"</select><label>Valor efetivamente recebido (R$)</label><input class='field payment-amount' type='number' min='0' step='0.01' value='"+Number(o.amount_received||0).toFixed(2)+"'><label>Recebido por</label><select class='field payment-via'><option value=''>Selecione</option><option value='Pix' "+(o.payment_received_via==="Pix"?"selected":"")+">Pix</option><option value='Dinheiro' "+(o.payment_received_via==="Dinheiro"?"selected":"")+">Dinheiro</option></select>"+(o.payment_received_at?"<p class='muted'>Último recebimento registrado em "+new Date(o.payment_received_at).toLocaleString("pt-BR")+"</p>":"")+"<label>Anotação interna (não aparece para a cliente)</label><textarea class='field order-internal-notes' rows='2' maxlength='1000'>"+esc(o.internal_notes||"")+"</textarea><button type='button' class='btn save-order'>Salvar pedido e pagamento</button> <span class='muted order-save-msg'></span></article>";
  };
  const archived=data.filter(o=>o.status==="entregue"&&o.payment_status==="pago");
- const active=data.filter(o=>!(o.status==="entregue"&&o.payment_status==="pago"));
+ const canceled=data.filter(o=>o.status==="cancelado");
+ const active=data.filter(o=>o.status!=="cancelado"&&!(o.status==="entregue"&&o.payment_status==="pago"));
  const activeHtml=active.map(makeOrderCard).join("");
  const archivedHtml=archived.map(makeOrderCard).join("");
+ const canceledHtml=canceled.map(o=>"<div style='display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line)'><span><b>Pedido #"+esc(o.order_number)+"</b> · "+esc(o.customer_name)+" · "+new Date(o.created_at).toLocaleDateString("pt-BR")+"</span><button type='button' class='btn danger delete-canceled' data-order-id='"+esc(o.id)+"'>Excluir definitivamente</button></div>").join("");
  box.innerHTML=(activeHtml||"<p class='muted'>Nenhum pedido pendente de atendimento. Os pedidos concluídos ficam no histórico arquivado.</p>")+
-  "<details class='archived-orders' style='margin-top:16px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fffdf8'><summary style='cursor:pointer;font-weight:600;color:var(--green)'>Histórico arquivado ("+archived.length+") · abrir somente quando precisar</summary><div id='archivedOrdersList'>"+(archivedHtml||"<p class='muted'>Nenhum pedido arquivado ainda.</p>")+"</div></details>";
+  "<details class='archived-orders' style='margin-top:16px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fffdf8'><summary style='cursor:pointer;font-weight:600;color:var(--green)'>Histórico arquivado ("+archived.length+") · abrir somente quando precisar</summary><div id='archivedOrdersList'>"+(archivedHtml||"<p class='muted'>Nenhum pedido arquivado ainda.</p>")+"</div></details>"+
+  "<details class='canceled-orders' style='margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fffdf8'><summary style='cursor:pointer;font-weight:600;color:#a34e43'>Pedidos cancelados ("+canceled.length+") · não entram nos indicadores</summary><div>"+(canceledHtml||"<p class='muted'>Nenhum pedido cancelado.</p>")+"</div></details>";
  return true;
 }
 $("ordersAdminList").addEventListener("click",async e=>{
+ const deleteBtn=e.target.closest(".delete-canceled");
+ if(deleteBtn){
+  const orderId=deleteBtn.dataset.orderId;
+  if(!confirm("Excluir definitivamente este pedido cancelado? Esta ação não pode ser desfeita."))return;
+  deleteBtn.disabled=true;deleteBtn.textContent="Excluindo...";
+  const {error}=await db.from("orders").delete().eq("id",orderId).eq("status","cancelado");
+  if(error){alert("Não foi possível excluir o pedido: "+error.message);deleteBtn.disabled=false;deleteBtn.textContent="Excluir definitivamente";return;}
+  await loadOrders();
+  return;
+ }
  const btn=e.target.closest(".save-order");if(!btn)return;
  const card=btn.closest(".order-admin-card");if(!card)return;
  btn.disabled=true;
