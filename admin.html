@@ -366,7 +366,8 @@ function renderOrderDashboard(data,events){
  const reportMonth=$("reportMonth");
  if(reportMonth&&!reportMonth.value)reportMonth.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
  renderMonthlyReport(allOrders,window.gfOrderEvents);
- renderFinancialInsights(allOrders,window.gfOrderEvents);\n renderProductPerformance(allOrders);
+ renderFinancialInsights(allOrders,window.gfOrderEvents);
+ renderProductPerformance(allOrders);
 }
 
 function exportMonthlyReport(){
@@ -446,7 +447,9 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="reportMonth"){renderMonthlyReport(window.gfOrdersCache||[],window.gfOrderEvents||[]);renderFinancialInsights(window.gfOrdersCache||[],window.gfOrderEvents||[]);renderProductPerformance(window.gfOrdersCache||[]);}});
 document.addEventListener("click",e=>{if(e.target&&e.target.id==="exportMonthlyReport")exportMonthlyReport();});
-document.addEventListener("change",e=>{if(e.target&&e.target.id==="productPerformancePeriod")renderProductPerformance(window.gfOrdersCache||[]);});\ndocument.addEventListener("click",e=>{if(e.target&&e.target.id==="refreshProductPerformance")renderProductPerformance(window.gfOrdersCache||[]);});\ndocument.addEventListener("click",e=>{if(e.target&&e.target.id==="refreshSmartAlerts")renderSmartAlerts(window.gfOrdersCache||[],typeof crmCustomers!=="undefined"?crmCustomers:[]);});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="productPerformancePeriod")renderProductPerformance(window.gfOrdersCache||[]);});
+document.addEventListener("click",e=>{if(e.target&&e.target.id==="refreshProductPerformance")renderProductPerformance(window.gfOrdersCache||[]);});
+document.addEventListener("click",e=>{if(e.target&&e.target.id==="refreshSmartAlerts")renderSmartAlerts(window.gfOrdersCache||[],typeof crmCustomers!=="undefined"?crmCustomers:[]);});
 function moneyAdmin(value){return "R$ "+Number(value||0).toFixed(2).replace(".",",");}
 let gfAgendaMonth=new Date();
 function renderAgenda(orders){
