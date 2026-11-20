@@ -228,6 +228,7 @@ $("ordersAdminList").addEventListener("click",async e=>{
  const amount_received=Number(card.querySelector(".payment-amount").value);
  const payment_received_via=payment_status==="pendente"?null:(card.querySelector(".payment-via").value||null);
  const internal_notes=card.querySelector(".order-internal-notes").value.trim();
+ const msg=card.querySelector(".order-save-msg");
  const production_date=card.querySelector(".production-date").value||null;
  const production_time=card.querySelector(".production-time").value||null;
  const delivery_date=card.querySelector(".delivery-date").value||null;
@@ -235,7 +236,6 @@ $("ordersAdminList").addEventListener("click",async e=>{
  if(production_time&&!production_date){msg.textContent="Informe a data de produção para usar um horário.";btn.disabled=false;return;}
  if(delivery_time&&!delivery_date){msg.textContent="Informe a data de entrega/retirada para usar um horário.";btn.disabled=false;return;}
  if(production_date&&delivery_date&&production_date>delivery_date){msg.textContent="A produção não pode ficar depois da entrega/retirada.";btn.disabled=false;return;}
- const msg=card.querySelector(".order-save-msg");
  if(!Number.isFinite(amount_received)||amount_received<0){msg.textContent="Informe um valor válido.";btn.disabled=false;return;}
  if(payment_status==="pendente"&&amount_received!==0){msg.textContent="Pagamento pendente deve ter valor recebido igual a R$ 0,00.";btn.disabled=false;return;}
  if(payment_status!=="pendente"&&amount_received<=0){msg.textContent="Informe quanto foi recebido.";btn.disabled=false;return;}
