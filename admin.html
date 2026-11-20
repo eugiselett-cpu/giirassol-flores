@@ -129,6 +129,51 @@
 :focus-visible{outline:3px solid #d4a83b!important;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+
+/* Refinos de usabilidade do painel no celular */
+@media(max-width:760px){
+ #app .card .order-quick-filter{width:100%;min-height:44px;text-align:left}
+ #app .card:has(#orderSearch) .row{gap:4px}
+ #orderSearch,#orderStatusFilter,#orderPaymentFilter,#orderSort{width:100%;min-height:46px;margin:5px 0 10px}
+ #orderFilterCount{padding:9px 10px;border-radius:9px;background:#faf6ee}
+ #ordersAdminList{min-width:0;overflow-wrap:anywhere}
+ .order-admin-card{width:100%;min-width:0;overflow:hidden}
+ .order-admin-card .row{width:100%;min-width:0}
+ .order-admin-card .btn,.order-admin-card button{width:100%;white-space:normal;line-height:1.3}
+ .admin-menu-toggle{position:sticky;top:calc(8px + env(safe-area-inset-top));z-index:20;box-shadow:0 4px 14px #40351b18}
+ .admin-menu-backdrop{touch-action:pan-y}
+ .admin-sidebar.menu-open{padding-top:calc(18px + env(safe-area-inset-top));padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+ .admin-nav button{min-height:48px;font-size:14px}
+ .admin-content,.admin-panel,.admin-panel>.card{min-width:0;max-width:100%}
+ .admin-panel>.card{overflow-wrap:anywhere}
+ .dashboard-stat{min-height:88px;display:flex;flex-direction:column;justify-content:space-between}
+ .order-admin-card{padding:12px!important}
+ .order-admin-card .schedule-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .order-admin-card .schedule-fields input{min-height:44px;font-size:16px}
+ .order-admin-card .field{min-height:44px;font-size:16px}
+ .order-admin-card .btn{min-height:46px}
+ .order-admin-card .quick-message-tools{display:grid!important;grid-template-columns:1fr!important}
+ .order-admin-card .quick-message-tools .field,.order-admin-card .quick-message-tools button{width:100%;min-width:0;min-height:46px}
+ .product{grid-template-columns:60px minmax(0,1fr)!important;align-items:start}
+ .product .pricebox,.product .actions{grid-column:2;min-width:0}
+ .product .field{min-height:44px;font-size:16px}
+ .product .actions button,.product .actions .btn{min-height:44px}
+ #notificationCenter article{align-items:flex-start}
+ #notificationCenter article .btn{min-height:42px}
+ #notificationCenter .row{display:grid;grid-template-columns:1fr;gap:8px}
+ #notificationCenter .row .field,#notificationCenter .row button{width:100%;min-height:44px}
+ .finance-product-table{font-size:12px}
+ input,select,textarea,button{scroll-margin-top:80px}
+}
+@media(max-width:420px){
+ .admin-panel>.card{padding:12px!important}
+ .order-admin-card .schedule-fields{grid-template-columns:1fr}
+ .dashboard-grid{gap:7px}
+ .dashboard-stat{padding:10px;min-height:82px}
+ .dashboard-stat span{font-size:11px}
+ .dashboard-stat strong{font-size:19px}
+ .admin-nav button{padding:10px;font-size:13px}
+}
 </style></head><body>
 <header><h1>🌻 Giirassol Flores</h1><div class="muted">Painel administrativo • acesso restrito</div></header>
 <main>
