@@ -1241,6 +1241,9 @@ async function trackOrder(){
   finally{button.disabled=false;button.textContent='Consultar pedido';}
 }
 
+const trackingFromUrl=new URLSearchParams(location.search).get('acompanhar');
+if(trackingFromUrl){const trackingInput=document.getElementById('trackingCodeInput');if(trackingInput){trackingInput.value=trackingFromUrl;document.getElementById('orderTracking').scrollIntoView({behavior:'smooth'});trackOrder();}}
+
 async function confirmCheckout(){
   if(!window.gfCheckoutUrl||window.gfSavingOrder)return;
   const whatsappWindow=window.open('about:blank','_blank');
