@@ -103,6 +103,7 @@ async function loadOrders(){
   "<details class='canceled-orders' style='margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fffdf8'><summary style='cursor:pointer;font-weight:600;color:#a34e43'>Pedidos cancelados ("+canceled.length+") · não entram nos indicadores</summary><div>"+(canceledHtml||"<p class='muted'>Nenhum pedido cancelado.</p>")+"</div></details>";
  return true;
 }
+$("ordersAdminList").addEventListener("change",e=>{if(e.target.matches(".payment-status")&&e.target.value==="pendente"){const card=e.target.closest(".order-admin-card");if(card){card.querySelector(".payment-amount").value="0.00";card.querySelector(".payment-via").value="";}}});
 $("ordersAdminList").addEventListener("click",async e=>{
  const deleteBtn=e.target.closest(".delete-canceled");
  if(deleteBtn){
@@ -111,6 +112,7 @@ $("ordersAdminList").addEventListener("click",async e=>{
   deleteBtn.disabled=true;deleteBtn.textContent="Excluindo...";
   const {error}=await db.from("orders").delete().eq("id",orderId).eq("status","cancelado");
   if(error){alert("Não foi possível excluir o pedido: "+error.message);deleteBtn.disabled=false;deleteBtn.textContent="Excluir definitivamente";return;}
+  alert("Pedido cancelado excluído com sucesso.");
   await loadOrders();
   return;
  }
@@ -131,7 +133,7 @@ $("ordersAdminList").addEventListener("click",async e=>{
  const status=card.querySelector(".order-status").value;
  const payment_status=card.querySelector(".payment-status").value;
  const amount_received=Number(card.querySelector(".payment-amount").value);
- const payment_received_via=card.querySelector(".payment-via").value||null;
+ const payment_received_via=payment_status==="pendente"?null:(card.querySelector(".payment-via").value||null);
  const internal_notes=card.querySelector(".order-internal-notes").value.trim();
  const msg=card.querySelector(".order-save-msg");
  if(!Number.isFinite(amount_received)||amount_received<0){msg.textContent="Informe um valor válido.";btn.disabled=false;return;}
