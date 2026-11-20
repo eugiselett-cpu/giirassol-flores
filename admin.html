@@ -140,13 +140,43 @@
 <p><button class="btn" id="addReview" type="button">Salvar avaliação</button> <span id="reviewMsg" class="muted"></span></p>
 <div id="reviewsAdminList"></div>
 </div>
-<div class="card" id="ordersAgenda"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">Agenda de encomendas</h2><p class="muted" style="margin:0">Organize produção e entrega/retirada. As datas são opcionais e podem ser definidas em cada pedido.</p></div><span class="tag">Visão mensal</span></div><div class="agenda-toolbar"><button type="button" class="btn light" id="agendaPrev">← Mês anterior</button><strong id="agendaMonthLabel"></strong><button type="button" class="btn light" id="agendaNext">Próximo mês →</button></div><div class="agenda-grid" id="agendaWeekdays"><div class="agenda-weekday">Dom</div><div class="agenda-weekday">Seg</div><div class="agenda-weekday">Ter</div><div class="agenda-weekday">Qua</div><div class="agenda-weekday">Qui</div><div class="agenda-weekday">Sex</div><div class="agenda-weekday">Sáb</div></div><div class="agenda-grid" id="agendaCalendar"><p class="muted">Carregando agenda...</p></div><p class="muted" style="margin:10px 0 0">Verde: produção · Amarelo: entrega ou retirada. Clique em um pedido na lista para editar suas datas.</p></div><div class="card" id="ordersAdmin"><h2>Pedidos recebidos</h2><p class="muted">Acompanhe as encomendas e atualize o andamento.</p><div id="ordersAdminList"><p class="muted">Carregando pedidos...</p></div></div><div class="card"><h2>Catálogo</h2><input id="search" class="field" placeholder="Buscar produto pelo nome"><div id="products"></div></div>
+<div class="card" id="ordersAgenda"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">Agenda de encomendas</h2><p class="muted" style="margin:0">Organize produção e entrega/retirada. As datas são opcionais e podem ser definidas em cada pedido.</p></div><span class="tag">Visão mensal</span></div><div class="agenda-toolbar"><button type="button" class="btn light" id="agendaPrev">← Mês anterior</button><strong id="agendaMonthLabel"></strong><button type="button" class="btn light" id="agendaNext">Próximo mês →</button></div><div class="agenda-grid" id="agendaWeekdays"><div class="agenda-weekday">Dom</div><div class="agenda-weekday">Seg</div><div class="agenda-weekday">Ter</div><div class="agenda-weekday">Qua</div><div class="agenda-weekday">Qui</div><div class="agenda-weekday">Sex</div><div class="agenda-weekday">Sáb</div></div><div class="agenda-grid" id="agendaCalendar"><p class="muted">Carregando agenda...</p></div><p class="muted" style="margin:10px 0 0">Verde: produção · Amarelo: entrega ou retirada. Clique em um pedido na lista para editar suas datas.</p></div><div class="card" id="productionTemplatesCard"><h2>Modelos de checklist por categoria</h2><p class="muted">Personalize as etapas que aparecem nos pedidos de cada tipo de produto. Uma etapa por linha. Alterações valem para novos checklists; o progresso já salvo nos pedidos é preservado.</p><div id="productionTemplatesEditor"></div><button type="button" class="btn" id="saveProductionTemplates">Salvar modelos de produção</button> <span id="productionTemplatesMsg" class="muted"></span></div><div class="card" id="ordersAdmin"><h2>Pedidos recebidos</h2><p class="muted">Acompanhe as encomendas e atualize o andamento.</p><div id="ordersAdminList"><p class="muted">Carregando pedidos...</p></div></div><div class="card"><h2>Catálogo</h2><input id="search" class="field" placeholder="Buscar produto pelo nome"><div id="products"></div></div>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.89.0"></script><script>
 const db=window.supabase.createClient("https://plwtpqjdloziqgshyisn.supabase.co","sb_publishable_7fL4YZHParuDFtxctX1bcA_aOkEljcf");
 const OWNER="eugiselett@gmail.com";let products=[];
 const $=id=>document.getElementById(id);
+const productionCategoryDefaults={
+ "Flores":["Separar e conferir as flores","Hidratar e preparar as hastes","Montar a composição","Fazer acabamento e laço","Preparar cartão/mensagem","Embalar e proteger","Conferência final"],
+ "Flores especiais":["Conferir variedade e qualidade das flores","Hidratar e preparar as hastes","Montar a composição especial","Fazer acabamento e laço","Preparar cartão/mensagem","Embalar com proteção reforçada","Conferência final"],
+ "Buquês":["Separar e conferir as flores","Organizar as flores por tamanho e cor","Montar o buquê","Amarrar e ajustar o formato","Fazer acabamento e embalagem","Preparar cartão/mensagem","Conferência final"],
+ "Adicionais":["Separar os itens adicionais","Conferir personalização e mensagem","Montar o conjunto com o pedido","Embalar e proteger","Conferência final"],
+ "Pelúcias":["Separar e conferir a pelúcia","Conferir limpeza e acabamento","Combinar com os demais itens do pedido","Embalar e proteger","Conferência final"]
+};
+let productionChecklistTemplates={};
+let productionChecklistMap={};
+function normalizedProductionTemplates(value){
+ const out={};
+ Object.keys(productionCategoryDefaults).forEach(category=>{
+  const list=Array.isArray(value&&value[category])?value[category]:productionCategoryDefaults[category];
+  out[category]=list.map(x=>String(x||"").trim()).filter(Boolean).slice(0,20);
+  if(!out[category].length)out[category]=productionCategoryDefaults[category].slice();
+ });
+ return out;
+}
+function renderProductionTemplates(){
+ const box=$("productionTemplatesEditor");if(!box)return;
+ const templates=normalizedProductionTemplates(productionChecklistTemplates);
+ box.innerHTML=Object.keys(productionCategoryDefaults).map(category=>"<div style='padding:12px 0;border-bottom:1px solid var(--line)'><label><b>"+esc(category)+"</b></label><textarea class='field production-template-input' data-category='"+esc(category)+"' rows='5' maxlength='1600' placeholder='Uma etapa por linha'>"+esc(templates[category].join("\\n"))+"</textarea><small class='muted'>Uma etapa por linha · até 20 etapas</small></div>").join("");
+}
+function saveProductionTemplates(){
+ const payload={};
+ document.querySelectorAll(".production-template-input").forEach(input=>{payload[input.dataset.category]=input.value.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean).slice(0,20);});
+ productionChecklistTemplates=normalizedProductionTemplates(payload);
+ return productionChecklistTemplates;
+}
+
 function message(id,s){$(id).textContent=s}
 async function checkSession(){const {data:{session}}=await db.auth.getSession();if(session){if((session.user.email||"").toLowerCase()!==OWNER){await db.auth.signOut();message("loginMsg","Esta conta não tem permissão para administrar a loja.");return}showApp()}}
 function showApp(){$("login").classList.add("hidden");$("app").classList.remove("hidden");loadAll()}
@@ -236,7 +266,7 @@ $("refreshDashboard").onclick=async()=>{
  btn.disabled=false;btn.textContent=label;
 };
 async function loadProducts(){const {data,error}=await db.from("products").select("*").order("sort_order");if(error){alert("Erro ao carregar produtos: "+error.message);return}products=data||[];render()}
-let currentHeroImage="";let currentTiles=[];let currentLogoImage="";let pendingCarouselFiles=[];function renderCarouselAdmin(){const box=$("carouselAdminList");if(!box)return;box.innerHTML=currentTiles.map((url,i)=>'<div class="carousel-admin-item"><img src="'+esc(url)+'" alt="Foto do carrossel '+(i+1)+'"><div class="muted">Foto '+(i+1)+'</div><button type="button" class="btn danger removeCarousel" data-index="'+i+'">Remover</button></div>').join("");box.querySelectorAll(".removeCarousel").forEach(b=>b.onclick=()=>{currentTiles.splice(Number(b.dataset.index),1);renderCarouselAdmin()})}async function loadSettings(){const {data,error}=await db.from("store_settings").select("*").eq("id",1).maybeSingle();if(error)return;if(data){seasonalCampaigns=Array.isArray(data.seasonal_campaigns)?data.seasonal_campaigns:[];renderCampaignList();currentLogoImage=data.logo_image||"";setPreview("logoPreview",currentLogoImage);[["decorHeaderLeft","decor_header_left"],["decorHeaderRight","decor_header_right"],["decorHeroLeftTop","decor_hero_left_top"],["decorHeroLeftBottom","decor_hero_left_bottom"],["decorHeroRightTop","decor_hero_right_top"],["decorHeroRightBottom","decor_hero_right_bottom"]].forEach(([id,key])=>setPreview(id+"Preview",data[key]||""));currentHeroImage=data.hero_image||"";currentTiles=(Array.isArray(data.shortcuts)?data.shortcuts:[]).map(x=>typeof x==="string"?x:(x&&x.image)||"").filter(Boolean);setPreview("heroPreview",currentHeroImage);renderCarouselAdmin();$("whatsapp").value=data.whatsapp||"";$("instagram").value=data.instagram||"";$("lead").value=data.lead_time||"";$("themeBg").value=data.theme_bg||"#fff9ef";$("themeHeader").value=data.theme_header||"#fff8e9";$("themeSurface").value=data.theme_surface||"#ffffff";$("themePrimary").value=data.theme_primary||"#687c52";$("themeAccent").value=data.theme_accent||"#f5e6b8";$("themeText").value=data.theme_text||"#4d473b";$("themeDetails").value=data.theme_details||"#687c52";$("themeSecondary").value=data.theme_secondary||"#877d6b";window.updateThemeColorLabels&&window.updateThemeColorLabels()}}
+let currentHeroImage="";let currentTiles=[];let currentLogoImage="";let pendingCarouselFiles=[];function renderCarouselAdmin(){const box=$("carouselAdminList");if(!box)return;box.innerHTML=currentTiles.map((url,i)=>'<div class="carousel-admin-item"><img src="'+esc(url)+'" alt="Foto do carrossel '+(i+1)+'"><div class="muted">Foto '+(i+1)+'</div><button type="button" class="btn danger removeCarousel" data-index="'+i+'">Remover</button></div>').join("");box.querySelectorAll(".removeCarousel").forEach(b=>b.onclick=()=>{currentTiles.splice(Number(b.dataset.index),1);renderCarouselAdmin()})}async function loadSettings(){const {data,error}=await db.from("store_settings").select("*").eq("id",1).maybeSingle();if(error)return;if(data){productionChecklistTemplates=normalizedProductionTemplates(data.production_checklist_templates||{});renderProductionTemplates();seasonalCampaigns=Array.isArray(data.seasonal_campaigns)?data.seasonal_campaigns:[];renderCampaignList();currentLogoImage=data.logo_image||"";setPreview("logoPreview",currentLogoImage);[["decorHeaderLeft","decor_header_left"],["decorHeaderRight","decor_header_right"],["decorHeroLeftTop","decor_hero_left_top"],["decorHeroLeftBottom","decor_hero_left_bottom"],["decorHeroRightTop","decor_hero_right_top"],["decorHeroRightBottom","decor_hero_right_bottom"]].forEach(([id,key])=>setPreview(id+"Preview",data[key]||""));currentHeroImage=data.hero_image||"";currentTiles=(Array.isArray(data.shortcuts)?data.shortcuts:[]).map(x=>typeof x==="string"?x:(x&&x.image)||"").filter(Boolean);setPreview("heroPreview",currentHeroImage);renderCarouselAdmin();$("whatsapp").value=data.whatsapp||"";$("instagram").value=data.instagram||"";$("lead").value=data.lead_time||"";$("themeBg").value=data.theme_bg||"#fff9ef";$("themeHeader").value=data.theme_header||"#fff8e9";$("themeSurface").value=data.theme_surface||"#ffffff";$("themePrimary").value=data.theme_primary||"#687c52";$("themeAccent").value=data.theme_accent||"#f5e6b8";$("themeText").value=data.theme_text||"#4d473b";$("themeDetails").value=data.theme_details||"#687c52";$("themeSecondary").value=data.theme_secondary||"#877d6b";window.updateThemeColorLabels&&window.updateThemeColorLabels()}}
 function render(){const term=$("search").value.toLowerCase();$("products").innerHTML=products.filter(p=>p.name.toLowerCase().includes(term)).map(p=>'<div class="product" data-id="'+p.id+'"><img src="'+(p.image||"")+'" onerror="this.style.opacity=.2" alt=""><div><b>'+esc(p.name)+'</b><div class="tag">'+esc(p.category)+'</div><input class="field name" value="'+esc(p.name)+'" aria-label="Nome do produto"><label>Descrição do produto</label><textarea class="field description" rows="3" maxlength="1200" placeholder="Detalhes, tamanho, cores, personalização...">'+esc(p.description||"")+'</textarea></div><div class="pricebox"><label>Estoque disponível (vazio = sem controle)</label><input class="field stock" type="number" min="0" step="1" value="'+(p.stock_quantity??"")+'" placeholder="Sem controle de estoque"><div class="muted stock-hint">'+(p.stock_quantity===null||p.stock_quantity===undefined?'Estoque não controlado':Number(p.stock_quantity)===0?'Esgotado':Number(p.stock_quantity)<=3?'Estoque baixo: '+p.stock_quantity+' unidade(s)':'Em estoque: '+p.stock_quantity+' unidade(s)')+'</div><label>Preço (R$)</label><input class="field price" type="number" min="0" step=".01" value="'+(p.price??"")+'" placeholder="Sem preço"><label class="tag"><input class="promo" type="checkbox" '+(p.promo_active?"checked":"")+' > Em promoção</label><label>Preço promocional</label><input class="field promoPrice" type="number" min="0" step=".01" value="'+(p.promo_price??"")+'" placeholder="Com desconto"></div><div class="actions"><label class="tag"><input class="active" type="checkbox" '+(p.active?"checked":"")+'> Exibir no catálogo</label><label class="tag" style="display:block;margin:8px 0"><input class="available" type="checkbox" '+(p.available!==false?"checked":"")+'> Disponível para encomenda</label>'+(p.category==="Buquês"?'<label class="tag" style="display:block;margin:8px 0"><input class="bouquet-color" type="checkbox" '+(p.allow_bouquet_color_choice?"checked":"")+' > Permitir escolha de cores do buquê</label>':"")+(p.featured?'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox" checked> Produto em destaque</label>':'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox"> Produto em destaque</label>')+'<label class="btn light" style="display:block;text-align:center;margin:7px 0;cursor:pointer">Trocar foto<input class="photo hidden" type="file" accept="image/png,image/jpeg,image/webp"></label><button class="btn save" style="width:100%">Salvar</button></div></div>').join("")}
 
 const orderStatuses=[["recebido","Recebido"],["em_producao","Em produção"],["pronto","Pronto para retirada/entrega"],["entregue","Entregue"],["cancelado","Cancelado"]];
@@ -401,9 +431,19 @@ async function loadOrders(){
  orderEvents.forEach(ev=>(eventMap[ev.order_id]??=[]).push(ev));
  (data||[]).forEach(order=>{order._events=eventMap[order.id]||[];});
  renderOrderDashboard(data||[],orderEvents);
- const defaultProductionTasks=[{id:"flowers",label:"Separar e conferir as flores"},{id:"materials",label:"Separar materiais e acessórios"},{id:"assembly",label:"Montar o arranjo"},{id:"finish",label:"Fazer acabamento e laço"},{id:"card",label:"Preparar cartão/mensagem"},{id:"package",label:"Embalar e proteger"},{id:"review",label:"Conferência final antes da entrega"}];
- let productionChecklistMap={};
- const productionTasksFor=o=>{const saved=productionChecklistMap[o.id];return Array.isArray(saved)&&saved.length?saved:defaultProductionTasks.map(t=>({...t,done:false}));};
+ const productionTasksFor=o=>{
+  const saved=productionChecklistMap[o.id];
+  if(Array.isArray(saved)&&saved.length)return saved;
+  const categories=[...new Set((Array.isArray(o.items)?o.items:[]).map(item=>item.category).filter(category=>productionCategoryDefaults[category]))];
+  const templates=normalizedProductionTemplates(productionChecklistTemplates);
+  const selected=categories.length?categories:Object.keys(productionCategoryDefaults);
+  const tasks=[],seen=new Set();
+  selected.forEach(category=>(templates[category]||[]).forEach((label,index)=>{
+   const id=category.toLowerCase().replace(/[^a-z0-9]+/g,"-")+"-"+index;
+   if(!seen.has(label.toLowerCase())){seen.add(label.toLowerCase());tasks.push({id,label,done:false});}
+  }));
+  return tasks;
+ };
  const productionChecklistHtml=o=>{const tasks=productionTasksFor(o),done=tasks.filter(t=>t.done).length,pct=tasks.length?Math.round(done/tasks.length*100):0;return "<details class='production-checklist' style='margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fffdf8'><summary style='cursor:pointer;font-weight:700;color:var(--green)'>🧵 Checklist de montagem · "+done+"/"+tasks.length+" etapas ("+pct+"%)</summary><div style='height:7px;background:#eee8dc;border-radius:10px;overflow:hidden;margin:10px 0'><div style='height:100%;width:"+pct+"%;background:#80976c;border-radius:10px'></div></div><div class='production-task-list'>"+tasks.map(t=>"<label style='display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid #eee8dc;font-size:14px'><input type='checkbox' class='production-task-check' data-task-id='"+esc(t.id)+"' "+(t.done?"checked":"")+" style='width:19px;height:19px;flex:0 0 19px;accent-color:#71885f'><span style='"+(t.done?"text-decoration:line-through;color:#8b887f":"")+"'>"+esc(t.label)+"</span></label>").join("")+"</div><p class='muted production-checklist-msg' style='margin:8px 0 0'>As etapas são salvas automaticamente.</p></details>";};
  const makeOrderCard=o=>{
   const items=Array.isArray(o.items)?o.items:[];
@@ -426,6 +466,15 @@ async function loadOrders(){
  applyOrderFilters();
  return true;
 }
+
+$("saveProductionTemplates").onclick=async()=>{
+ const btn=$("saveProductionTemplates"),msg=$("productionTemplatesMsg");
+ const payload=saveProductionTemplates();btn.disabled=true;msg.textContent="Salvando modelos...";
+ const {error}=await db.from("store_settings").update({production_checklist_templates:payload,updated_at:new Date().toISOString()}).eq("id",1);
+ btn.disabled=false;
+ if(error){msg.textContent="Não foi possível salvar: "+error.message;return;}
+ msg.textContent="Modelos salvos! Os próximos checklists usarão essas etapas.";
+};
 $("ordersAdminList").addEventListener("change",async e=>{
  const check=e.target.closest(".production-task-check");if(!check)return;
  const card=check.closest(".order-admin-card");if(!card)return;
