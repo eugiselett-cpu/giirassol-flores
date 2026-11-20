@@ -180,7 +180,22 @@
 <p><button class="btn" id="addReview" type="button">Salvar avaliação</button> <span id="reviewMsg" class="muted"></span></p>
 <div id="reviewsAdminList"></div>
 </div>
-<div class="card" id="ordersAgenda"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">Agenda de encomendas</h2><p class="muted" style="margin:0">Organize produção e entrega/retirada. As datas são opcionais e podem ser definidas em cada pedido.</p></div><span class="tag">Visão mensal</span></div><div class="agenda-toolbar"><button type="button" class="btn light" id="agendaPrev">← Mês anterior</button><strong id="agendaMonthLabel"></strong><button type="button" class="btn light" id="agendaNext">Próximo mês →</button></div><div class="agenda-grid" id="agendaWeekdays"><div class="agenda-weekday">Dom</div><div class="agenda-weekday">Seg</div><div class="agenda-weekday">Ter</div><div class="agenda-weekday">Qua</div><div class="agenda-weekday">Qui</div><div class="agenda-weekday">Sex</div><div class="agenda-weekday">Sáb</div></div><div class="agenda-grid" id="agendaCalendar"><p class="muted">Carregando agenda...</p></div><p class="muted" style="margin:10px 0 0">Verde: produção · Amarelo: entrega ou retirada. Clique em um pedido na lista para editar suas datas.</p></div><div class="card" id="productionTemplatesCard"><h2>Modelos de checklist por categoria</h2><p class="muted">Personalize as etapas que aparecem nos pedidos de cada tipo de produto. Uma etapa por linha. Alterações valem para novos checklists; o progresso já salvo nos pedidos é preservado.</p><div id="productionTemplatesEditor"></div><button type="button" class="btn" id="saveProductionTemplates">Salvar modelos de produção</button> <span id="productionTemplatesMsg" class="muted"></span></div><div class="card" id="ordersAdmin"><h2>Pedidos recebidos</h2><p class="muted">Acompanhe as encomendas e atualize o andamento.</p><div id="ordersAdminList"><p class="muted">Carregando pedidos...</p></div></div><div class="card" id="productWaitlistAdmin"><h2>Lista de espera de produtos 🌻</h2><p class="muted">Clientes que pediram para receber um aviso quando produtos esgotados voltarem. O contato é manual pelo WhatsApp.</p><div class="row"><div><label for="waitlistStatusFilter">Filtrar por situação</label><select id="waitlistStatusFilter" class="field"><option value="aguardando">Aguardando aviso</option><option value="">Todas as situações</option><option value="avisado">Já avisados</option><option value="cancelado">Cancelados</option></select></div><div><label for="waitlistSearch">Buscar cliente ou produto</label><input id="waitlistSearch" class="field" type="search" placeholder="Nome, WhatsApp ou produto"></div></div><div id="waitlistAdminList"><p class="muted">Carregando lista de espera...</p></div><p id="waitlistAdminMsg" class="muted" role="status" aria-live="polite"></p></div><div class="card"><h2>Catálogo</h2><input id="search" class="field" placeholder="Buscar produto pelo nome"><div id="products"></div></div>
+<div class="card" id="ordersAgenda"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">Agenda de encomendas</h2><p class="muted" style="margin:0">Organize produção e entrega/retirada. As datas são opcionais e podem ser definidas em cada pedido.</p></div><span class="tag">Visão mensal</span></div><div class="agenda-toolbar"><button type="button" class="btn light" id="agendaPrev">← Mês anterior</button><strong id="agendaMonthLabel"></strong><button type="button" class="btn light" id="agendaNext">Próximo mês →</button></div><div class="agenda-grid" id="agendaWeekdays"><div class="agenda-weekday">Dom</div><div class="agenda-weekday">Seg</div><div class="agenda-weekday">Ter</div><div class="agenda-weekday">Qua</div><div class="agenda-weekday">Qui</div><div class="agenda-weekday">Sex</div><div class="agenda-weekday">Sáb</div></div><div class="agenda-grid" id="agendaCalendar"><p class="muted">Carregando agenda...</p></div><p class="muted" style="margin:10px 0 0">Verde: produção · Amarelo: entrega ou retirada. Clique em um pedido na lista para editar suas datas.</p></div><div class="card" id="productionTemplatesCard"><h2>Modelos de checklist por categoria</h2><p class="muted">Personalize as etapas que aparecem nos pedidos de cada tipo de produto. Uma etapa por linha. Alterações valem para novos checklists; o progresso já salvo nos pedidos é preservado.</p><div id="productionTemplatesEditor"></div><button type="button" class="btn" id="saveProductionTemplates">Salvar modelos de produção</button> <span id="productionTemplatesMsg" class="muted"></span></div><div class="card" id="ordersAdmin"><h2>Central inteligente de pedidos 🌻</h2><p class="muted">Encontre rapidamente o que precisa de atenção, organize a fila e acompanhe pagamentos e prazos.</p>
+<div class="row" style="gap:8px;flex-wrap:wrap;margin:12px 0" id="orderQuickFilters">
+<button type="button" class="btn light order-quick-filter active" data-quick-filter="all">Todos</button>
+<button type="button" class="btn light order-quick-filter" data-quick-filter="overdue">Atrasados</button>
+<button type="button" class="btn light order-quick-filter" data-quick-filter="today">Para hoje</button>
+<button type="button" class="btn light order-quick-filter" data-quick-filter="production">Em produção</button>
+<button type="button" class="btn light order-quick-filter" data-quick-filter="payment">Pagamento pendente</button>
+</div>
+<div class="row" style="gap:10px;align-items:end;flex-wrap:wrap">
+<div style="flex:2;min-width:210px"><label for="orderSearch">Buscar pedido, cliente ou WhatsApp</label><input id="orderSearch" class="field" type="search" placeholder="Ex.: Gisele ou número do pedido"></div>
+<div style="flex:1;min-width:150px"><label for="orderStatusFilter">Situação do pedido</label><select id="orderStatusFilter" class="field"><option value="">Todas</option><option value="recebido">Recebido</option><option value="em_producao">Em produção</option><option value="pronto">Pronto</option><option value="entregue">Entregue</option></select></div>
+<div style="flex:1;min-width:150px"><label for="orderPaymentFilter">Pagamento</label><select id="orderPaymentFilter" class="field"><option value="">Todos</option><option value="pendente">Pendente</option><option value="parcial">Parcial</option><option value="pago">Pago</option></select></div>
+<div style="flex:1;min-width:150px"><label for="orderSort">Ordenar por</label><select id="orderSort" class="field"><option value="priority">Prioridade inteligente</option><option value="delivery">Data de entrega</option><option value="newest">Mais recentes</option><option value="oldest">Mais antigos</option></select></div>
+</div>
+<p id="orderFilterCount" class="muted" role="status" aria-live="polite" style="margin:10px 0">Carregando pedidos...</p>
+<div id="ordersAdminList"><p class="muted">Carregando pedidos...</p></div></div><div class="card" id="productWaitlistAdmin"><h2>Lista de espera de produtos 🌻</h2><p class="muted">Clientes que pediram para receber um aviso quando produtos esgotados voltarem. O contato é manual pelo WhatsApp.</p><div class="row"><div><label for="waitlistStatusFilter">Filtrar por situação</label><select id="waitlistStatusFilter" class="field"><option value="aguardando">Aguardando aviso</option><option value="">Todas as situações</option><option value="avisado">Já avisados</option><option value="cancelado">Cancelados</option></select></div><div><label for="waitlistSearch">Buscar cliente ou produto</label><input id="waitlistSearch" class="field" type="search" placeholder="Nome, WhatsApp ou produto"></div></div><div id="waitlistAdminList"><p class="muted">Carregando lista de espera...</p></div><p id="waitlistAdminMsg" class="muted" role="status" aria-live="polite"></p></div><div class="card"><h2>Catálogo</h2><input id="search" class="field" placeholder="Buscar produto pelo nome"><div id="products"></div></div>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.89.0"></script><script>
@@ -547,7 +562,35 @@ function renderAgenda(orders){
 $("agendaPrev").onclick=()=>{gfAgendaMonth.setMonth(gfAgendaMonth.getMonth()-1);renderAgenda(window.gfOrdersCache||[])};
 $("agendaNext").onclick=()=>{gfAgendaMonth.setMonth(gfAgendaMonth.getMonth()+1);renderAgenda(window.gfOrdersCache||[])};
 
-function applyOrderFilters(){const root=$("ordersAdminList");if(!root)return;const q=($("orderSearch")?.value||"").trim().toLocaleLowerCase("pt-BR"),st=$("orderStatusFilter")?.value||"",pay=$("orderPaymentFilter")?.value||"",sort=$("orderSort")?.value||"newest";const cards=[...root.querySelectorAll(".order-admin-card")];cards.forEach(card=>{const okText=!q||card.textContent.toLocaleLowerCase("pt-BR").includes(q)||(card.dataset.customerPhone||"").includes(q);card.hidden=!(okText&&(!st||card.dataset.status===st)&&(!pay||card.dataset.payment===pay));});const archived=root.querySelector(".archived-orders");const active=cards.filter(c=>!c.closest("#archivedOrdersList"));active.sort((a,b)=>sort==="oldest"?(a.dataset.created||"").localeCompare(b.dataset.created||""):sort==="delivery"?((a.dataset.delivery||"9999").localeCompare(b.dataset.delivery||"9999")):(b.dataset.created||"").localeCompare(a.dataset.created||""));active.forEach(card=>root.insertBefore(card,archived));const label=$("orderFilterCount");if(label)label.textContent=cards.filter(c=>!c.hidden).length+" pedido(s) encontrado(s) · alertas de prazo em destaque.";}
+let activeOrderQuickFilter="all";
+function orderLocalDateKey(date=new Date()){return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0");}
+function applyOrderFilters(){
+ const root=$("ordersAdminList");if(!root)return;
+ const q=($("orderSearch")?.value||"").trim().toLocaleLowerCase("pt-BR");
+ const st=$("orderStatusFilter")?.value||"",pay=$("orderPaymentFilter")?.value||"",sort=$("orderSort")?.value||"priority";
+ const today=orderLocalDateKey(),cards=[...root.querySelectorAll(".order-admin-card")];
+ const getPriority=card=>{const status=card.dataset.status||"",delivery=card.dataset.delivery||"",payment=card.dataset.payment||"pendente";if(status==="cancelado"||status==="entregue")return 9;if(delivery&&delivery<today)return 0;if(delivery===today)return 1;if(payment!=="pago")return 2;if(status==="em_producao")return 3;if(status==="pronto")return 4;return 5;};
+ cards.forEach(card=>{
+  const status=card.dataset.status||"",delivery=card.dataset.delivery||"",payment=card.dataset.payment||"pendente";
+  const phone=String(card.dataset.customerPhone||"").replace(/\\D/g,"");
+  const textMatch=!q||card.textContent.toLocaleLowerCase("pt-BR").includes(q)||phone.includes(q);
+  const quick=activeOrderQuickFilter==="all"||(activeOrderQuickFilter==="overdue"&&delivery&&delivery<today&&!["entregue","cancelado"].includes(status))||(activeOrderQuickFilter==="today"&&delivery===today&&!["entregue","cancelado"].includes(status))||(activeOrderQuickFilter==="production"&&status==="em_producao")||(activeOrderQuickFilter==="payment"&&payment!=="pago"&&status!=="cancelado");
+  card.hidden=!(textMatch&&quick&&(!st||status===st)&&(!pay||payment===pay));
+ });
+ const archived=root.querySelector(".archived-orders");
+ const active=cards.filter(card=>!card.closest("#archivedOrdersList"));
+ active.sort((a,b)=>{
+  if(sort==="oldest")return (a.dataset.created||"").localeCompare(b.dataset.created||"");
+  if(sort==="newest")return (b.dataset.created||"").localeCompare(a.dataset.created||"");
+  if(sort==="delivery")return (a.dataset.delivery||"9999").localeCompare(b.dataset.delivery||"9999");
+  return getPriority(a)-getPriority(b)||(a.dataset.delivery||"9999").localeCompare(b.dataset.delivery||"9999");
+ });
+ active.forEach(card=>root.insertBefore(card,archived));
+ const visible=cards.filter(card=>!card.hidden).length;
+ const count=$("orderFilterCount");if(count)count.textContent=visible+" de "+cards.length+" pedido(s) exibido(s) · prioridade considera atraso, prazo de hoje e pagamento.";
+ document.querySelectorAll(".order-quick-filter").forEach(button=>button.classList.toggle("active",button.dataset.quickFilter===activeOrderQuickFilter));
+}
+
 function normalizeBrazilWhatsApp(value){
  let digits=String(value||"").split("").filter(ch=>ch>="0"&&ch<="9").join("");
  if(digits.length===10||digits.length===11)digits="55"+digits;
@@ -664,6 +707,9 @@ $("ordersAdminList").addEventListener("change",async e=>{
  msg.textContent="Salvo!";
 });
 $("ordersAdminList").addEventListener("input",e=>{if(e.target.id==="orderSearch")applyOrderFilters()});$("ordersAdminList").addEventListener("change",e=>{if(["orderStatusFilter","orderPaymentFilter","orderSort"].includes(e.target.id))applyOrderFilters();if(e.target.matches(".payment-status")&&e.target.value==="pendente"){const card=e.target.closest(".order-admin-card");if(card){card.querySelector(".payment-amount").value="0.00";card.querySelector(".payment-via").value="";}}});
+["orderSearch","orderStatusFilter","orderPaymentFilter","orderSort"].forEach(id=>$(id)?.addEventListener(id==="orderSearch"?"input":"change",applyOrderFilters));
+$("orderQuickFilters")?.addEventListener("click",event=>{const button=event.target.closest("[data-quick-filter]");if(!button)return;activeOrderQuickFilter=button.dataset.quickFilter;applyOrderFilters();});
+
 $("ordersAdminList").addEventListener("click",async e=>{
  const deleteBtn=e.target.closest(".delete-canceled");
  if(deleteBtn){
