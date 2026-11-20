@@ -45,6 +45,25 @@ let currentHeroImage="";let currentTiles=[];let currentLogoImage="";let pendingC
 function render(){const term=$("search").value.toLowerCase();$("products").innerHTML=products.filter(p=>p.name.toLowerCase().includes(term)).map(p=>'<div class="product" data-id="'+p.id+'"><img src="'+(p.image||"")+'" onerror="this.style.opacity=.2" alt=""><div><b>'+esc(p.name)+'</b><div class="tag">'+esc(p.category)+'</div><input class="field name" value="'+esc(p.name)+'" aria-label="Nome do produto"><label>Descrição do produto</label><textarea class="field description" rows="3" maxlength="1200" placeholder="Detalhes, tamanho, cores, personalização...">'+esc(p.description||"")+'</textarea></div><div class="pricebox"><label>Preço (R$)</label><input class="field price" type="number" min="0" step=".01" value="'+(p.price??"")+'" placeholder="Sem preço"><label class="tag"><input class="promo" type="checkbox" '+(p.promo_active?"checked":"")+' > Em promoção</label><label>Preço promocional</label><input class="field promoPrice" type="number" min="0" step=".01" value="'+(p.promo_price??"")+'" placeholder="Com desconto"></div><div class="actions"><label class="tag"><input class="active" type="checkbox" '+(p.active?"checked":"")+'> Exibir no catálogo</label><label class="tag" style="display:block;margin:8px 0"><input class="available" type="checkbox" '+(p.available!==false?"checked":"")+'> Disponível para encomenda</label>'+(p.category==="Buquês"?'<label class="tag" style="display:block;margin:8px 0"><input class="bouquet-color" type="checkbox" '+(p.allow_bouquet_color_choice?"checked":"")+' > Permitir escolha de cores do buquê</label>':"")+(p.featured?'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox" checked> Produto em destaque</label>':'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox"> Produto em destaque</label>')+'<label class="btn light" style="display:block;text-align:center;margin:7px 0;cursor:pointer">Trocar foto<input class="photo hidden" type="file" accept="image/png,image/jpeg,image/webp"></label><button class="btn save" style="width:100%">Salvar</button></div></div>').join("")}
 
 const orderStatuses=[["recebido","Recebido"],["em_producao","Em produção"],["pronto","Pronto para retirada/entrega"],["entregue","Entregue"],["cancelado","Cancelado"]];
+function renderOrderDashboard(data){
+ const orders=Array.isArray(data)?data:[];
+ const pending=orders.filter(o=>!["entregue","cancelado"].includes(o.status)).length;
+ const delivered=orders.filter(o=>o.status==="entregue");
+ const revenue=delivered.reduce((sum,o)=>sum+Number(o.partial_total||0),0);
+ const now=new Date(),monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+ const monthOrders=orders.filter(o=>new Date(o.created_at)>=monthStart);
+ const monthValue=monthOrders.filter(o=>o.status!=="cancelado").reduce((sum,o)=>sum+Number(o.partial_total||0),0);
+ $("metricOrders").textContent=orders.length;
+ $("metricPending").textContent=pending;
+ $("metricDelivered").textContent=delivered.length;
+ $("metricRevenue").textContent=moneyAdmin(revenue);
+ $("metricMonth").innerHTML="<b>"+monthOrders.length+"</b> pedidos registrados neste mês<br><b>"+moneyAdmin(monthValue)+"</b> em valores parciais de pedidos não cancelados";
+ const popular={};
+ orders.filter(o=>o.status!=="cancelado").forEach(o=>(Array.isArray(o.items)?o.items:[]).forEach(item=>{const name=String(item.name||"Produto sem nome");popular[name]=(popular[name]||0)+Math.max(0,Number(item.quantity)||0);}));
+ const ranked=Object.entries(popular).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ $("popularProducts").innerHTML=ranked.length?ranked.map((x,i)=>"<li><span>"+(i+1)+". "+esc(x[0])+"</span><b>"+x[1]+" un.</b></li>").join(""):"<li class=dashboard-empty>Ainda não há produtos vendidos.</li>";
+ $("dashboardUpdated").textContent="Atualizado em "+now.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
 function moneyAdmin(value){return "R$ "+Number(value||0).toFixed(2).replace(".",",");}
 async function loadOrders(){
  const box=$("ordersAdminList");if(!box)return;
