@@ -306,7 +306,7 @@ function adminRuntimeNotice(text){
  }
  box.textContent=text;box.hidden=false;
 }
-window.addEventListener("error",event=>{console.error("Erro inesperado no painel",event.error||event.message);adminRuntimeNotice("O painel encontrou um erro inesperado. Recarregue a seção e tente novamente. Se persistir, confira o console do navegador.");});
+window.addEventListener("error",event=>{if(!event.error&&event.target&&event.target!==window)return;console.error("Erro inesperado no painel",event.error||event.message);adminRuntimeNotice("O painel encontrou um erro inesperado. Recarregue a seção e tente novamente. Se persistir, confira o console do navegador.");});
 window.addEventListener("unhandledrejection",event=>{console.error("Operação não concluída no painel",event.reason);const detail=event.reason&&event.reason.message?event.reason.message:"Falha inesperada";adminRuntimeNotice("Uma operação não foi concluída: "+detail+". Confira os dados e tente novamente.");});
 async function checkSession(){
  try{
