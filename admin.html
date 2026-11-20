@@ -552,9 +552,9 @@ function prepareOrderWhatsApp(button){
  const card=button.closest(".order-admin-card");if(!card)return;
  const feedback=card.querySelector(".order-save-msg");
  const show=(text)=>{if(feedback)feedback.textContent=text;else alert(text);};
- let phone=String(card.dataset.customerPhone||"").replace(/\\D/g,"");
+ let phone=String(card.dataset.customerPhone||"").replace(/\D/g,"");
  if(phone.length===10||phone.length===11)phone="55"+phone;
- if(!/^55\\d{10,11}$/.test(phone)){show("Não foi possível abrir: confira o WhatsApp do pedido e inclua DDD. Número encontrado: "+(card.dataset.customerPhone||"não informado"));return;}
+ if(!/^55\d{10,11}$/.test(phone)){show("Não foi possível abrir: confira o WhatsApp do pedido e inclua DDD. Número encontrado: "+(card.dataset.customerPhone||"não informado"));return;}
  const name=card.querySelector("p b")?.textContent?.trim()||"tudo bem";
  const order=(card.querySelector("div:first-child b")?.textContent||"").trim();
  const type=card.querySelector(".quick-message-type")?.value||"received";
@@ -564,10 +564,10 @@ function prepareOrderWhatsApp(button){
  const deliveryType=method.includes("retirada")?"retirada":"entrega";
  const dateText=deliveryDate?new Date(deliveryDate+"T12:00:00").toLocaleDateString("pt-BR"):"";
  const code=card.dataset.trackingCode||"";
- const tracking=code?"\\nAcompanhe seu pedido por aqui: https://eugiselett-cpu.github.io/giirassol-flores/acompanhar.html?codigo="+encodeURIComponent(code):"";
+ const tracking=code?"\nAcompanhe seu pedido por aqui: https://eugiselett-cpu.github.io/giirassol-flores/acompanhar.html?codigo="+encodeURIComponent(code):"";
  const previsao=deliveryDate?"A previsão combinada é para "+deliveryType+" em "+dateText+(deliveryTime?" às "+deliveryTime:"")+".":"Entre em contato para combinarmos "+deliveryType+".";
  const template=whatsappMessageTemplates[type]||defaultWhatsappTemplates[type]||defaultWhatsappTemplates.received;
- const messageText=template.replace(/\\{(nome|pedido|data|hora|tipo|previsao|link)\\}/g,(match,key)=>({nome,pedido:order,data:dateText,hora:deliveryTime,tipo:deliveryType,previsao,link:tracking})[key]||"");
+ const messageText=template.replace(/\{(nome|pedido|data|hora|tipo|previsao|link)\}/g,(match,key)=>({nome,pedido:order,data:dateText,hora:deliveryTime,tipo:deliveryType,previsao,link:tracking})[key]||"");
  const url="https://wa.me/"+phone+"?text="+encodeURIComponent(messageText);
  const popup=window.open(url,"_blank");
  if(popup){show("WhatsApp aberto em uma nova aba. Confira a conversa antes de enviar.");}
