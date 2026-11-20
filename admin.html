@@ -112,11 +112,15 @@ async function loadOrders(){
  const box=$("ordersAdminList");if(!box)return false;
  const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false}).limit(1000);
  if(error){box.innerHTML="<p class='muted'>Não foi possível carregar pedidos: "+esc(error.message)+"</p>";$("dashboardUpdated").textContent="Falha ao atualizar os indicadores.";return false;}
- const {data:eventRows,error:eventError}=await db.from("order_events").select("order_id,event_type,description,created_at,amount_delta,amount_received").order("created_at",{ascending:false}).limit(3000);
+ let orderEvents=[];
+ try{
+  const eventsResult=await db.from("order_events").select("order_id,event_type,description,created_at,amount_delta,amount_received").order("created_at",{ascending:false}).limit(3000);
+  if(!eventsResult.error)orderEvents=eventsResult.data||[];
+ }catch(eventsLoadError){console.warn("Não foi possível carregar o histórico dos pedidos:",eventsLoadError);}
  const eventMap={};
- if(!eventError)(eventRows||[]).forEach(ev=>(eventMap[ev.order_id]??=[]).push(ev));
+ orderEvents.forEach(ev=>(eventMap[ev.order_id]??=[]).push(ev));
  (data||[]).forEach(order=>{order._events=eventMap[order.id]||[];});
- renderOrderDashboard(data||[],eventRows||[]);
+ renderOrderDashboard(data||[],orderEvents);
  const makeOrderCard=o=>{
   const items=Array.isArray(o.items)?o.items:[];
   const lines=items.map(x=>"<li>"+esc(x.quantity)+" × "+esc(x.name)+(x.unit_price!==null&&x.unit_price!==undefined?" — "+moneyAdmin(x.unit_price):" — valor a confirmar")+"</li>").join("");
