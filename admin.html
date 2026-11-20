@@ -1062,7 +1062,7 @@ function downloadDataFile(filename,content,type){
 }
 function csvCell(value){
  let text= value===null||value===undefined?"":typeof value==="object"?JSON.stringify(value):String(value);
- if(/^[=+@\\-\\t\\r]/.test(text))text="'"+text;
+ if(/^[=+\-@\t\r]/.test(text))text="'"+text;
  return '"'+text.replace(/"/g,'""')+'"';
 }
 function toCsv(rows,columns){
