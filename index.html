@@ -790,7 +790,7 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   <select id="paymentMethod" class="field">
     <option value="">Selecione uma opção</option>
     <option value="Pix">Pix</option>
-    <option value="Dinheiro em espécie">Dinheiro em espécie</option>
+    <option value="Dinheiro">Dinheiro em espécie</option>
   </select>
 
   <label>Observações / personalização</label>
@@ -1204,6 +1204,7 @@ function closeOrderConfirmation(){
 
 async function confirmCheckout(){
   if(!window.gfCheckoutUrl||window.gfSavingOrder)return;
+  const whatsappWindow=window.open('about:blank','_blank');
   const button=document.querySelector('#orderConfirmation button[onclick="confirmCheckout()"]');
   window.gfSavingOrder=true;if(button){button.disabled=true;button.textContent='Registrando pedido...';}
   try{
@@ -1228,9 +1229,11 @@ async function confirmCheckout(){
     };
     const {error}=await db.from('orders').insert(payload);
     if(error)throw error;
-    window.open(window.gfCheckoutUrl,'_blank');
+    if(whatsappWindow&&!whatsappWindow.closed){whatsappWindow.location.href=window.gfCheckoutUrl;}
+    else{window.location.href=window.gfCheckoutUrl;}
     closeOrderConfirmation();
   }catch(error){
+    if(whatsappWindow&&!whatsappWindow.closed)whatsappWindow.close();
     console.error('Falha ao registrar pedido',error);
     alert('Não foi possível registrar seu pedido agora. Seu WhatsApp não será aberto ainda. Tente novamente em instantes.');
   }finally{
