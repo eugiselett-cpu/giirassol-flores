@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff8e9"><title>Acompanhe seu pedido | Giirassol Flores</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#fff9ef;color:#4d473b;font-family:Arial,sans-serif;display:grid;place-items:center;padding:20px}
+main{width:min(100%,560px);background:#fff;border:1px solid #eee3d0;border-radius:18px;padding:clamp(22px,5vw,38px);box-shadow:0 8px 28px #66502a12}
+.brand{text-align:center;color:#687c52;font:26px Georgia,serif;margin:0 0 8px}.sun{text-align:center;font-size:25px;margin-bottom:18px}
+h1{font:25px Georgia,serif;text-align:center;margin:0 0 10px;color:#687c52}p{line-height:1.5}.muted{color:#777;font-size:14px}
+#trackingResult{margin-top:18px}.status{font-weight:700;color:#315f42;font-size:18px}
+ul{padding-left:22px}li{margin:6px 0}.error{color:#9c352c}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">Giirassol Flores</div><div class="sun">🌻</div>
+  <h1>Acompanhe sua encomenda</h1>
+  <p class="muted" style="text-align:center">Esta página é exclusiva para quem recebeu um link de acompanhamento da loja.</p>
+  <div id="trackingResult" aria-live="polite">Consultando seu pedido...</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.89.0"></script>
+<script>
+const SUPABASE_URL="https://plwtpqjdloziqgshyisn.supabase.co";
+const SUPABASE_KEY="sb_publishable_7fL4YZHParuDFtxctX1bcA_aOkEljcf";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+async function trackOrder(){
+  const input=document.getElementById('trackingCodeInput');
+  const result=document.getElementById('trackingResult');
+  const button=document.getElementById('trackOrderButton');
+  const code=(input.value||'').trim();
+  if(!/^[A-HJ-NP-Z2-9]{12}$/i.test(code)&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code)){
+    result.textContent='Confira o código de acompanhamento e tente novamente.';return;
+  }
+  button.disabled=true;button.textContent='Consultando...';result.textContent='Buscando seu pedido...';
+  try{
+    const {data,error}=await db.rpc('track_order',{p_tracking_code:code});
+    if(error)throw error;
+    const order=Array.isArray(data)?data[0]:null;
+    if(!order){result.textContent='Não encontramos um pedido com esse código. Confira se copiou o código completo.';return;}
+    const labels={recebido:'Pedido recebido',em_producao:'Em produção',pronto:'Pronto para retirada/entrega',entregue:'Pedido entregue',cancelado:'Pedido cancelado'};
+    const card=document.createElement('div');
+    card.style.cssText='padding:14px;border:1px solid var(--line);border-radius:12px;background:#fffdf8';
+    const title=document.createElement('h3');title.textContent='Pedido #'+order.order_number;card.appendChild(title);
+    const greeting=document.createElement('p');greeting.textContent='Olá, '+order.customer_name+'!';card.appendChild(greeting);
+    const status=document.createElement('p');status.style.fontWeight='bold';status.textContent='Status: '+(labels[order.status]||'Em atualização');card.appendChild(status);
+    const updated=document.createElement('p');updated.className='small';updated.textContent='Última atualização: '+new Date(order.status_updated_at).toLocaleString('pt-BR');card.appendChild(updated);
+    const heading=document.createElement('p');heading.textContent='Itens do pedido:';card.appendChild(heading);
+    const list=document.createElement('ul');
+    (Array.isArray(order.items)?order.items:[]).forEach(item=>{const li=document.createElement('li');li.textContent=(Number(item.quantity)||1)+' × '+String(item.name||'Produto');list.appendChild(li);});
+    card.appendChild(list);result.replaceChildren(card);
+  }catch(error){console.error('Falha ao consultar pedido',error);result.textContent='Não foi possível consultar agora. Tente novamente em instantes.';}
+  finally{button.disabled=false;button.textContent='Consultar pedido';}
+}
+
+const trackingFromUrl=new URLSearchParams(location.search).get('acompanhar');
+if(trackingFromUrl){const trackingInput=document.getElementById('trackingCodeInput');if(trackingInput){trackingInput.value=trackingFromUrl;document.getElementById('orderTracking').scrollIntoView({behavior:'auto',block:'start'});trackOrder();}}
+
+
+(async function(){
+ const code=new URLSearchParams(location.search).get('codigo')||'';
+ const input=document.createElement('input');input.value=code;
+ const result=document.getElementById('trackingResult');
+ if(!/^[A-HJ-NP-Z2-9]{12}$/i.test(code)&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code)){
+  result.className='error';result.textContent='Este link não contém um código válido. Peça à loja que reenvie seu link.';return;
+ }
+ try{
+  const {data,error}=await db.rpc('track_order',{p_tracking_code:code});
+  if(error)throw error;
+  const order=Array.isArray(data)?data[0]:null;
+  if(!order){result.className='error';result.textContent='Não encontramos este pedido. Confira o link recebido com a loja.';return;}
+  const labels={recebido:'Pedido recebido',em_producao:'Em produção',pronto:'Pronto para retirada/entrega',entregue:'Pedido entregue',cancelado:'Pedido cancelado'};
+  const title=document.createElement('h2');title.textContent='Pedido #'+order.order_number;result.appendChild(title);
+  const greeting=document.createElement('p');greeting.textContent='Olá, '+order.customer_name+'!';result.appendChild(greeting);
+  const status=document.createElement('p');status.className='status';status.textContent='Status: '+(labels[order.status]||'Em atualização');result.appendChild(status);
+  const updated=document.createElement('p');updated.className='muted';updated.textContent='Última atualização: '+new Date(order.status_updated_at).toLocaleString('pt-BR');result.appendChild(updated);
+  const heading=document.createElement('p');heading.textContent='Itens do pedido:';result.appendChild(heading);
+  const list=document.createElement('ul');
+  (Array.isArray(order.items)?order.items:[]).forEach(item=>{const li=document.createElement('li');li.textContent=(Number(item.quantity)||1)+' × '+String(item.name||'Produto');list.appendChild(li);});
+  result.appendChild(list);
+ }catch(error){console.error(error);result.className='error';result.textContent='Não foi possível consultar seu pedido agora. Tente novamente mais tarde.';}
+})();
+</script>
+</body></html>
