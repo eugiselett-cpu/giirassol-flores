@@ -1231,12 +1231,13 @@ async function applyStoreCoupon(){
  const ids=Object.keys(cart);const subtotal=ids.reduce((sum,id)=>{const p=products.find(x=>String(x.id)===String(id));return sum+(p&&p.price!==null&&p.price!==''&&p.price!==undefined?(p.promo_active&&p.promo_price!=null?Number(p.promo_price):Number(p.price))*cart[id]:0);},0);
  status.textContent='Verificando cupom...';
  try{
-  const {data,error}=await db.from('coupons').select('code,discount_type,discount_value,minimum_order_amount,starts_at,ends_at,usage_limit,usage_count,active').eq('code',code).eq('active',true).maybeSingle();
+  const {data,error}=await db.from('coupons').select('code,discount_type,discount_value,minimum_order_amount,starts_at,ends_at,usage_limit,usage_count,active,customer_phone').eq('code',code).eq('active',true).maybeSingle();
   if(error)throw error;
   if(!data)throw new Error('Cupom não encontrado ou desativado.');
   const today=new Date();const key=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   if(key<data.starts_at||key>data.ends_at)throw new Error('Este cupom ainda não está válido ou já expirou.');
   if(data.usage_limit!==null&&Number(data.usage_count)>=Number(data.usage_limit))throw new Error('Este cupom atingiu o limite de utilizações.');
+  if(data.customer_phone){const entered=String(document.getElementById('customerPhone').value||'').replace(/[^0-9]/g,'');if(entered!==String(data.customer_phone).replace(/[^0-9]/g,''))throw new Error('Este cupom de recompensa é exclusivo do WhatsApp cadastrado. Informe o mesmo número no campo de contato.');}
   if(subtotal<Number(data.minimum_order_amount||0))throw new Error('O pedido mínimo para este cupom é '+money(data.minimum_order_amount)+'.');
   const amount=data.discount_type==='percentage'?Math.round(subtotal*Number(data.discount_value))/100:Math.min(subtotal,Number(data.discount_value));
   appliedCoupon={code:data.code,discount_type:data.discount_type,discount_value:Number(data.discount_value)};
