@@ -1236,7 +1236,6 @@ async function confirmCheckout(){
       payment_method:document.getElementById('paymentMethod').value,
       lead_time:settings.lead,
       status:'recebido',
-      tracking_code:trackingCode,
       tracking_code_short:trackingCode
     };
     const {error}=await db.from('orders').insert(payload);
@@ -1250,7 +1249,8 @@ async function confirmCheckout(){
   }catch(error){
     if(whatsappWindow&&!whatsappWindow.closed)whatsappWindow.close();
     console.error('Falha ao registrar pedido',error);
-    alert('Não foi possível registrar seu pedido agora. Seu WhatsApp não será aberto ainda. Tente novamente em instantes.');
+    const detail=error&&error.message?error.message:'Erro inesperado';
+    alert('Não foi possível registrar seu pedido. Nenhuma encomenda foi enviada. Detalhe: '+detail);
   }finally{
     window.gfSavingOrder=false;
     if(button){button.disabled=false;button.textContent='Enviar pelo WhatsApp';}
