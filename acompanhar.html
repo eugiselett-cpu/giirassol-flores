@@ -10,6 +10,15 @@ main{width:min(100%,560px);background:#fff;border:1px solid #eee3d0;border-radiu
 h1{font:25px Georgia,serif;text-align:center;margin:0 0 10px;color:#687c52}p{line-height:1.5}.muted{color:#777;font-size:14px}
 #trackingResult{margin-top:18px}.status{font-weight:700;color:#315f42;font-size:18px}
 ul{padding-left:22px}li{margin:6px 0}.error{color:#9c352c}
+.timeline{display:grid;gap:0;margin:18px 0 22px;padding:4px 0}
+.step{display:grid;grid-template-columns:28px 1fr;gap:10px;min-height:58px;position:relative}
+.step:not(:last-child)::before{content:"";position:absolute;left:12px;top:25px;bottom:-2px;width:3px;background:#e8dfcf}
+.step.done:not(:last-child)::before{background:#6f8457}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid #d8cfbf;background:#fff;display:grid;place-items:center;color:#fff;font-size:14px;font-weight:700;z-index:1}
+.step.done .dot{background:#6f8457;border-color:#6f8457}
+.step.current .dot{background:#c99a27;border-color:#c99a27;box-shadow:0 0 0 4px #f8edcf}
+.step-name{font-weight:600;padding-top:3px}.step.pending .step-name{color:#999;font-weight:400}
+.cancelled{padding:12px;border-radius:10px;background:#fff0ed;color:#9c352c;font-weight:600;margin:16px 0}
 </style>
 </head>
 <body>
@@ -43,7 +52,21 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   const labels={recebido:"Pedido recebido",em_producao:"Em produção",pronto:"Pronto para retirada/entrega",entregue:"Pedido entregue",cancelado:"Pedido cancelado"};
   const card=document.createElement("div");card.style.cssText="padding:16px;border:1px solid #eee3d0;border-radius:12px;background:#fffdf8;text-align:left";
   const greeting=document.createElement("p");greeting.textContent="Olá, "+order.customer_name+"!";card.appendChild(greeting);
-  const status=document.createElement("p");status.className="status";status.textContent="Status: "+(labels[order.status]||"Em atualização");card.appendChild(status);
+  const status=document.createElement("p");status.className="status";status.textContent="Status atual: "+(labels[order.status]||"Em atualização");card.appendChild(status);
+  if(order.status==="cancelado"){
+   const cancelled=document.createElement("div");cancelled.className="cancelled";cancelled.textContent="Esta encomenda foi cancelada. Se precisar de ajuda, fale diretamente com a Giirassol Flores.";card.appendChild(cancelled);
+  }else{
+   const steps=[["recebido","Pedido recebido"],["em_producao","Em produção"],["pronto","Pronto para retirada/entrega"],["entregue","Entregue"]];
+   const current=steps.findIndex(step=>step[0]===order.status);
+   const timeline=document.createElement("div");timeline.className="timeline";timeline.setAttribute("aria-label","Etapas do pedido");
+   steps.forEach((step,index)=>{
+    const row=document.createElement("div");row.className="step "+(index<current?"done":index===current?"done current":"pending");
+    const dot=document.createElement("span");dot.className="dot";dot.textContent=index<current?"✓":index===current?"•":"";
+    const name=document.createElement("span");name.className="step-name";name.textContent=step[1]+(index===current?" · etapa atual":"");
+    row.append(dot,name);timeline.appendChild(row);
+   });
+   card.appendChild(timeline);
+  }
   const updated=document.createElement("p");updated.className="muted";updated.textContent="Última atualização: "+new Date(order.status_updated_at).toLocaleString("pt-BR");card.appendChild(updated);
   const heading=document.createElement("p");heading.textContent="Itens da sua encomenda:";card.appendChild(heading);
   const list=document.createElement("ul");
