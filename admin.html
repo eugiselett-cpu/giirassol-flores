@@ -57,7 +57,7 @@ let currentHeroImage="";let currentTiles=[];let currentLogoImage="";let pendingC
 function render(){const term=$("search").value.toLowerCase();$("products").innerHTML=products.filter(p=>p.name.toLowerCase().includes(term)).map(p=>'<div class="product" data-id="'+p.id+'"><img src="'+(p.image||"")+'" onerror="this.style.opacity=.2" alt=""><div><b>'+esc(p.name)+'</b><div class="tag">'+esc(p.category)+'</div><input class="field name" value="'+esc(p.name)+'" aria-label="Nome do produto"><label>Descrição do produto</label><textarea class="field description" rows="3" maxlength="1200" placeholder="Detalhes, tamanho, cores, personalização...">'+esc(p.description||"")+'</textarea></div><div class="pricebox"><label>Preço (R$)</label><input class="field price" type="number" min="0" step=".01" value="'+(p.price??"")+'" placeholder="Sem preço"><label class="tag"><input class="promo" type="checkbox" '+(p.promo_active?"checked":"")+' > Em promoção</label><label>Preço promocional</label><input class="field promoPrice" type="number" min="0" step=".01" value="'+(p.promo_price??"")+'" placeholder="Com desconto"></div><div class="actions"><label class="tag"><input class="active" type="checkbox" '+(p.active?"checked":"")+'> Exibir no catálogo</label><label class="tag" style="display:block;margin:8px 0"><input class="available" type="checkbox" '+(p.available!==false?"checked":"")+'> Disponível para encomenda</label>'+(p.category==="Buquês"?'<label class="tag" style="display:block;margin:8px 0"><input class="bouquet-color" type="checkbox" '+(p.allow_bouquet_color_choice?"checked":"")+' > Permitir escolha de cores do buquê</label>':"")+(p.featured?'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox" checked> Produto em destaque</label>':'<label class="tag" style="display:block;margin:8px 0"><input class="featured" type="checkbox"> Produto em destaque</label>')+'<label class="btn light" style="display:block;text-align:center;margin:7px 0;cursor:pointer">Trocar foto<input class="photo hidden" type="file" accept="image/png,image/jpeg,image/webp"></label><button class="btn save" style="width:100%">Salvar</button></div></div>').join("")}
 
 const orderStatuses=[["recebido","Recebido"],["em_producao","Em produção"],["pronto","Pronto para retirada/entrega"],["entregue","Entregue"],["cancelado","Cancelado"]];
-function renderOrderDashboard(data){
+function renderOrderDashboard(data,events){
  const allOrders=Array.isArray(data)?data:[];
  const orders=allOrders.filter(o=>o.status!=="cancelado");
  const pending=orders.filter(o=>!["entregue","cancelado"].includes(o.status)).length;
@@ -79,7 +79,7 @@ function renderOrderDashboard(data){
  $("popularProducts").innerHTML=ranked.length?ranked.map((x,i)=>"<li><span>"+(i+1)+". "+esc(x[0])+"</span><b>"+x[1]+" un.</b></li>").join(""):"<li class=dashboard-empty>Ainda não há produtos vendidos.</li>";
  $("dashboardUpdated").textContent="Atualizado em "+now.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
  window.gfOrdersCache=allOrders;
- window.gfOrderEvents=eventRows||[];
+ window.gfOrderEvents=Array.isArray(events)?events:[];
  const reportMonth=$("reportMonth");
  if(reportMonth&&!reportMonth.value)reportMonth.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
  renderMonthlyReport(allOrders,window.gfOrderEvents);
@@ -116,7 +116,7 @@ async function loadOrders(){
  const eventMap={};
  if(!eventError)(eventRows||[]).forEach(ev=>(eventMap[ev.order_id]??=[]).push(ev));
  (data||[]).forEach(order=>{order._events=eventMap[order.id]||[];});
- renderOrderDashboard(data||[]);
+ renderOrderDashboard(data||[],eventRows||[]);
  const makeOrderCard=o=>{
   const items=Array.isArray(o.items)?o.items:[];
   const lines=items.map(x=>"<li>"+esc(x.quantity)+" × "+esc(x.name)+(x.unit_price!==null&&x.unit_price!==undefined?" — "+moneyAdmin(x.unit_price):" — valor a confirmar")+"</li>").join("");
