@@ -759,7 +759,36 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 }
 @media(prefers-reduced-motion:reduce){.store-info-item{transition:none}.store-info-item:hover{transform:none}}
 
-.waitlist-cta{display:block;margin:9px auto 0;border:0;border-radius:8px;padding:9px 12px;background:var(--green);color:#fff;font-size:12px;font-weight:700;cursor:pointer}.waitlist-modal{display:none;position:fixed;inset:0;z-index:10050;background:#211b1480;align-items:center;justify-content:center;padding:18px}.waitlist-modal.open{display:flex}.waitlist-panel{position:relative;width:min(100%,430px);background:var(--paper,#fff);border-radius:18px;padding:26px;box-shadow:0 16px 55px #0003;color:var(--ink)}.waitlist-panel h2{margin:7px 0;color:var(--green);font:26px Georgia,serif}.waitlist-kicker{color:var(--green);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.waitlist-explain{color:var(--muted);font-size:14px;line-height:1.5}.waitlist-close{position:absolute;right:13px;top:9px;border:0;background:transparent;font-size:28px;color:var(--muted);cursor:pointer}.waitlist-panel label{display:block;margin:12px 0 5px;font-size:13px;font-weight:700}.waitlist-panel input{width:100%;padding:12px;border:1px solid #ddd3bd;border-radius:9px;font:15px Arial}.waitlist-submit{width:100%;margin-top:16px;padding:13px;border:0;border-radius:10px;background:var(--green);color:white;font-weight:700;cursor:pointer}.waitlist-submit:disabled{opacity:.6}.waitlist-panel #waitlistFeedback{font-size:13px;color:var(--green);min-height:18px;margin-bottom:0}</style>
+.waitlist-cta{display:block;margin:9px auto 0;border:0;border-radius:8px;padding:9px 12px;background:var(--green);color:#fff;font-size:12px;font-weight:700;cursor:pointer}.waitlist-modal{display:none;position:fixed;inset:0;z-index:10050;background:#211b1480;align-items:center;justify-content:center;padding:18px}.waitlist-modal.open{display:flex}.waitlist-panel{position:relative;width:min(100%,430px);background:var(--paper,#fff);border-radius:18px;padding:26px;box-shadow:0 16px 55px #0003;color:var(--ink)}.waitlist-panel h2{margin:7px 0;color:var(--green);font:26px Georgia,serif}.waitlist-kicker{color:var(--green);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.waitlist-explain{color:var(--muted);font-size:14px;line-height:1.5}.waitlist-close{position:absolute;right:13px;top:9px;border:0;background:transparent;font-size:28px;color:var(--muted);cursor:pointer}.waitlist-panel label{display:block;margin:12px 0 5px;font-size:13px;font-weight:700}.waitlist-panel input{width:100%;padding:12px;border:1px solid #ddd3bd;border-radius:9px;font:15px Arial}.waitlist-submit{width:100%;margin-top:16px;padding:13px;border:0;border-radius:10px;background:var(--green);color:white;font-weight:700;cursor:pointer}.waitlist-submit:disabled{opacity:.6}.waitlist-panel #waitlistFeedback{font-size:13px;color:var(--green);min-height:18px;margin-bottom:0}
+/* Refinamento mobile: alvos de toque, áreas seguras e modais */
+@media(max-width:700px){
+ body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+ .mobile-bottom-nav{padding-bottom:env(safe-area-inset-bottom);min-height:calc(68px + env(safe-area-inset-bottom))}
+ .mobile-bottom-nav a,.mobile-bottom-nav button{min-height:48px;touch-action:manipulation}
+ .mobile-head-action{min-width:46px;min-height:46px}
+ .panel{left:10px!important;right:10px!important;bottom:calc(76px + env(safe-area-inset-bottom))!important;width:auto!important;max-height:min(76dvh,680px)!important;padding:14px!important;border-radius:16px!important}
+ .panel.open{overscroll-behavior:contain}
+ .cartrow{grid-template-columns:52px minmax(0,1fr) auto;gap:7px}
+ .cartrow img{width:52px;height:52px}
+ .qty button{width:34px;height:34px;min-width:34px}
+ .product .add,.product-dialog-add,.waitlist-cta,.waitlist-submit{min-height:46px;padding:12px 14px;font-size:14px;touch-action:manipulation}
+ .product-dialog{align-items:flex-end!important;padding:0!important}
+ .product-dialog-card{width:100%!important;max-height:92dvh!important;border-radius:20px 20px 0 0!important;padding:16px 16px calc(18px + env(safe-area-inset-bottom))!important;overscroll-behavior:contain}
+ .product-dialog-image{height:min(36dvh,290px)!important}
+ .waitlist-modal,.order-confirmation{align-items:flex-end!important;padding:0!important}
+ .waitlist-panel,.order-confirmation-card{width:100%!important;max-height:92dvh!important;overflow-y:auto;overscroll-behavior:contain;border-radius:20px 20px 0 0!important;padding:22px 18px calc(20px + env(safe-area-inset-bottom))!important}
+ .waitlist-panel input,.field{font-size:16px!important;min-height:46px}
+ .waitlist-close,.product-dialog-close{width:44px;height:44px;display:grid;place-items:center}
+ .order-confirmation-preview{max-height:36dvh}
+ .order-confirmation-actions button{min-height:48px}
+ .whatsapp-float{bottom:calc(82px + env(safe-area-inset-bottom))!important}
+ .product,.promotion-card,.featured-card{min-width:0}
+ .product button,.promotion-card button,.featured-card button{touch-action:manipulation}
+}
+:focus-visible{outline:3px solid var(--yellow,#d4a83b)!important;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+</style>
 </head>
 
 <body>
