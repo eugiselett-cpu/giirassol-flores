@@ -1202,10 +1202,41 @@ function closeOrderConfirmation(){
   confirmation.setAttribute('aria-hidden','true');
 }
 
-function confirmCheckout(){
-  if(!window.gfCheckoutUrl)return;
-  window.open(window.gfCheckoutUrl,'_blank');
-  closeOrderConfirmation();
+async function confirmCheckout(){
+  if(!window.gfCheckoutUrl||window.gfSavingOrder)return;
+  const button=document.querySelector('#orderConfirmation button[onclick="confirmCheckout()"]');
+  window.gfSavingOrder=true;if(button){button.disabled=true;button.textContent='Registrando pedido...';}
+  try{
+    const ids=Object.keys(cart);
+    const orderItems=ids.map(id=>{
+      const p=products.find(x=>String(x.id)===String(id));if(!p||p.available===false)return null;
+      const unitPrice=p.promo_active&&p.promo_price!=null?Number(p.promo_price):(p.price!==null&&p.price!==''&&p.price!==undefined?Number(p.price):null);
+      return {product_id:p.id,name:p.name,category:p.category,quantity:cart[id],unit_price:unitPrice};
+    }).filter(Boolean);
+    const total=orderItems.reduce((sum,item)=>sum+(item.unit_price===null?0:item.unit_price*item.quantity),0);
+    const deliveryMethod=document.getElementById('deliveryMethod').value;
+    const payload={
+      customer_name:document.getElementById('customer').value.trim()||'Não informado',
+      items:orderItems,partial_total:total,
+      notes:document.getElementById('notes').value.trim()||null,
+      color_preference:cartColorPreference,
+      delivery_method:deliveryMethod,
+      delivery_address:deliveryMethod==='Entrega em domicílio'?document.getElementById('deliveryAddress').value.trim():null,
+      payment_method:document.getElementById('paymentMethod').value,
+      lead_time:settings.lead,
+      status:'recebido'
+    };
+    const {error}=await db.from('orders').insert(payload);
+    if(error)throw error;
+    window.open(window.gfCheckoutUrl,'_blank');
+    closeOrderConfirmation();
+  }catch(error){
+    console.error('Falha ao registrar pedido',error);
+    alert('Não foi possível registrar seu pedido agora. Seu WhatsApp não será aberto ainda. Tente novamente em instantes.');
+  }finally{
+    window.gfSavingOrder=false;
+    if(button){button.disabled=false;button.textContent='Enviar pelo WhatsApp';}
+  }
 }
 
 document.getElementById('customerReviewForm')?.addEventListener('submit',async event=>{
