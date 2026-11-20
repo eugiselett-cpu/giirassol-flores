@@ -548,36 +548,35 @@ $("agendaPrev").onclick=()=>{gfAgendaMonth.setMonth(gfAgendaMonth.getMonth()-1);
 $("agendaNext").onclick=()=>{gfAgendaMonth.setMonth(gfAgendaMonth.getMonth()+1);renderAgenda(window.gfOrdersCache||[])};
 
 function applyOrderFilters(){const root=$("ordersAdminList");if(!root)return;const q=($("orderSearch")?.value||"").trim().toLocaleLowerCase("pt-BR"),st=$("orderStatusFilter")?.value||"",pay=$("orderPaymentFilter")?.value||"",sort=$("orderSort")?.value||"newest";const cards=[...root.querySelectorAll(".order-admin-card")];cards.forEach(card=>{const okText=!q||card.textContent.toLocaleLowerCase("pt-BR").includes(q)||(card.dataset.customerPhone||"").includes(q);card.hidden=!(okText&&(!st||card.dataset.status===st)&&(!pay||card.dataset.payment===pay));});const archived=root.querySelector(".archived-orders");const active=cards.filter(c=>!c.closest("#archivedOrdersList"));active.sort((a,b)=>sort==="oldest"?(a.dataset.created||"").localeCompare(b.dataset.created||""):sort==="delivery"?((a.dataset.delivery||"9999").localeCompare(b.dataset.delivery||"9999")):(b.dataset.created||"").localeCompare(a.dataset.created||""));active.forEach(card=>root.insertBefore(card,archived));const label=$("orderFilterCount");if(label)label.textContent=cards.filter(c=>!c.hidden).length+" pedido(s) encontrado(s) · alertas de prazo em destaque.";}
+function normalizeBrazilWhatsApp(value){
+ let digits=String(value||"").split("").filter(ch=>ch>="0"&&ch<="9").join("");
+ if(digits.length===10||digits.length===11)digits="55"+digits;
+ if(digits.startsWith("55")&&(digits.length===12||digits.length===13))return digits;
+ return "";
+}
 function prepareOrderWhatsApp(button){
  const card=button.closest(".order-admin-card");if(!card)return;
- const feedback=card.querySelector(".order-save-msg");
- const show=(text)=>{if(feedback)feedback.textContent=text;else alert(text);};
- let phone=String(card.dataset.customerPhone||"").replace(/\D/g,"");
- if(phone.length===10||phone.length===11)phone="55"+phone;
- if(!/^55\d{10,11}$/.test(phone)){show("Não foi possível abrir: confira o WhatsApp do pedido e inclua DDD. Número encontrado: "+(card.dataset.customerPhone||"não informado"));return;}
+ const feedback=card.querySelector(".order-save-msg"),show=text=>{if(feedback)feedback.textContent=text;};
+ const originalPhone=String(card.dataset.customerPhone||""),phone=normalizeBrazilWhatsApp(originalPhone);
+ if(!phone){show("WhatsApp inválido. Confira o cadastro do cliente: "+(originalPhone||"número não informado"));return;}
  const name=card.querySelector("p b")?.textContent?.trim()||"tudo bem";
  const order=(card.querySelector("div:first-child b")?.textContent||"").trim();
  const type=card.querySelector(".quick-message-type")?.value||"received";
- const deliveryDate=card.querySelector(".delivery-date")?.value||"";
- const deliveryTime=card.querySelector(".delivery-time")?.value||"";
- const method=(card.querySelector("p.muted")?.textContent||"").toLowerCase();
- const deliveryType=method.includes("retirada")?"retirada":"entrega";
- const dateText=deliveryDate?new Date(deliveryDate+"T12:00:00").toLocaleDateString("pt-BR"):"";
- const code=card.dataset.trackingCode||"";
- const tracking=code?"\nAcompanhe seu pedido por aqui: https://eugiselett-cpu.github.io/giirassol-flores/acompanhar.html?codigo="+encodeURIComponent(code):"";
+ const deliveryDate=card.querySelector(".delivery-date")?.value||"",deliveryTime=card.querySelector(".delivery-time")?.value||"";
+ const method=(card.querySelector("p.muted")?.textContent||"").toLowerCase(),deliveryType=method.includes("retirada")?"retirada":"entrega";
+ const dateText=deliveryDate?new Date(deliveryDate+"T12:00:00").toLocaleDateString("pt-BR"):"",code=card.dataset.trackingCode||"";
+ const tracking=code?"\\nAcompanhe seu pedido por aqui: https://eugiselett-cpu.github.io/giirassol-flores/acompanhar.html?codigo="+encodeURIComponent(code):"";
  const previsao=deliveryDate?"A previsão combinada é para "+deliveryType+" em "+dateText+(deliveryTime?" às "+deliveryTime:"")+".":"Entre em contato para combinarmos "+deliveryType+".";
  const template=whatsappMessageTemplates[type]||defaultWhatsappTemplates[type]||defaultWhatsappTemplates.received;
- const messageText=template.replace(/\{(nome|pedido|data|hora|tipo|previsao|link)\}/g,(match,key)=>({nome,pedido:order,data:dateText,hora:deliveryTime,tipo:deliveryType,previsao,link:tracking})[key]||"");
+ const messageText=template.replace(/\\{(nome|pedido|data|hora|tipo|previsao|link)\\}/g,(match,key)=>({nome,pedido:order,data:dateText,hora:deliveryTime,tipo:deliveryType,previsao,link:tracking})[key]||"");
  const url="https://wa.me/"+phone+"?text="+encodeURIComponent(messageText);
+ let fallback=card.querySelector(".whatsapp-open-fallback");
+ if(!fallback){fallback=document.createElement("a");fallback.className="whatsapp-open-fallback";fallback.target="_blank";fallback.rel="noopener noreferrer";fallback.style.cssText="display:inline-block;margin:8px 0 0;padding:9px 12px;border-radius:8px;background:#e8f2e8;color:#245b35;font-weight:700";button.insertAdjacentElement("afterend",fallback);}
+ fallback.href=url;fallback.textContent="Se não abrir automaticamente, clique aqui para abrir o WhatsApp";
  const popup=window.open(url,"_blank");
- if(popup){show("WhatsApp aberto em uma nova aba. Confira a conversa antes de enviar.");}
- else{
-  show("O navegador bloqueou a nova aba. Clique no link abaixo para abrir o WhatsApp:");
-  let fallback=card.querySelector(".whatsapp-open-fallback");
-  if(!fallback){fallback=document.createElement("a");fallback.className="whatsapp-open-fallback";fallback.target="_blank";fallback.rel="noopener noreferrer";fallback.style.cssText="display:inline-block;margin-top:7px;padding:9px 12px;border-radius:8px;background:#e8f2e8;color:#245b35;font-weight:700";button.insertAdjacentElement("afterend",fallback);}
-  fallback.href=url;fallback.textContent="Abrir conversa no WhatsApp";
- }
+ show(popup?"WhatsApp solicitado. Se a nova aba não aparecer, use o link logo abaixo.":"O navegador bloqueou a nova aba. Use o link logo abaixo para abrir o WhatsApp.");
 }
+
 async function loadOrders(){
  const box=$("ordersAdminList");if(!box)return false;
  const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false}).limit(1000);
@@ -637,9 +636,6 @@ async function loadOrders(){
  box.innerHTML="<div class='order-tools'><input class='wide' id='orderSearch' placeholder='Buscar por cliente, telefone, produto ou nº do pedido...'><select id='orderStatusFilter'><option value=''>Todos os status</option>"+orderStatuses.map(st=>"<option value='"+st[0]+"'>"+st[1]+"</option>").join("")+"</select><select id='orderPaymentFilter'><option value=''>Todos os pagamentos</option><option value='pendente'>Pendente</option><option value='parcial'>Parcial</option><option value='pago'>Pago</option></select><select id='orderSort'><option value='newest'>Mais recentes</option><option value='oldest'>Mais antigos</option><option value='delivery'>Entrega mais próxima</option></select></div><p class='muted' id='orderFilterCount'></p>"+(activeHtml||"<p class='muted'>Nenhum pedido pendente de atendimento. Os pedidos concluídos ficam no histórico arquivado.</p>")+
   "<details class='archived-orders' style='margin-top:16px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fffdf8'><summary style='cursor:pointer;font-weight:600;color:var(--green)'>Histórico arquivado ("+archived.length+") · abrir somente quando precisar</summary><div id='archivedOrdersList'>"+(archivedHtml||"<p class='muted'>Nenhum pedido arquivado ainda.</p>")+"</div></details>"+
   "<details class='canceled-orders' style='margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fffdf8'><summary style='cursor:pointer;font-weight:600;color:#a34e43'>Pedidos cancelados ("+canceled.length+") · não entram nos indicadores</summary><div>"+(canceledHtml||"<p class='muted'>Nenhum pedido cancelado.</p>")+"</div></details>";
- box.querySelectorAll(".send-quick-message").forEach(button=>{
-  button.addEventListener("click",function(event){event.preventDefault();event.stopPropagation();prepareOrderWhatsApp(button);});
- });
  applyOrderFilters();
  return true;
 }
@@ -680,6 +676,8 @@ $("ordersAdminList").addEventListener("click",async e=>{
   await loadOrders();
   return;
  }
+ const quickMessageBtn=e.target.closest(".send-quick-message");
+ if(quickMessageBtn){e.preventDefault();prepareOrderWhatsApp(quickMessageBtn);return;}
  const notifyBtn=e.target.closest(".notify-production");
  if(notifyBtn){
   const card=notifyBtn.closest(".order-admin-card");
