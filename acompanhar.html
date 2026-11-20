@@ -24,61 +24,36 @@ ul{padding-left:22px}li{margin:6px 0}.error{color:#9c352c}
 const SUPABASE_URL="https://plwtpqjdloziqgshyisn.supabase.co";
 const SUPABASE_KEY="sb_publishable_7fL4YZHParuDFtxctX1bcA_aOkEljcf";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-async function trackOrder(){
-  const input=document.getElementById('trackingCodeInput');
-  const result=document.getElementById('trackingResult');
-  const button=document.getElementById('trackOrderButton');
-  const code=(input.value||'').trim();
-  if(!/^[A-HJ-NP-Z2-9]{12}$/i.test(code)&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code)){
-    result.textContent='Confira o código de acompanhamento e tente novamente.';return;
-  }
-  button.disabled=true;button.textContent='Consultando...';result.textContent='Buscando seu pedido...';
-  try{
-    const {data,error}=await db.rpc('track_order',{p_tracking_code:code});
-    if(error)throw error;
-    const order=Array.isArray(data)?data[0]:null;
-    if(!order){result.textContent='Não encontramos um pedido com esse código. Confira se copiou o código completo.';return;}
-    const labels={recebido:'Pedido recebido',em_producao:'Em produção',pronto:'Pronto para retirada/entrega',entregue:'Pedido entregue',cancelado:'Pedido cancelado'};
-    const card=document.createElement('div');
-    card.style.cssText='padding:14px;border:1px solid var(--line);border-radius:12px;background:#fffdf8';
-    const title=document.createElement('h3');title.textContent='Pedido #'+order.order_number;card.appendChild(title);
-    const greeting=document.createElement('p');greeting.textContent='Olá, '+order.customer_name+'!';card.appendChild(greeting);
-    const status=document.createElement('p');status.style.fontWeight='bold';status.textContent='Status: '+(labels[order.status]||'Em atualização');card.appendChild(status);
-    const updated=document.createElement('p');updated.className='small';updated.textContent='Última atualização: '+new Date(order.status_updated_at).toLocaleString('pt-BR');card.appendChild(updated);
-    const heading=document.createElement('p');heading.textContent='Itens do pedido:';card.appendChild(heading);
-    const list=document.createElement('ul');
-    (Array.isArray(order.items)?order.items:[]).forEach(item=>{const li=document.createElement('li');li.textContent=(Number(item.quantity)||1)+' × '+String(item.name||'Produto');list.appendChild(li);});
-    card.appendChild(list);result.replaceChildren(card);
-  }catch(error){console.error('Falha ao consultar pedido',error);result.textContent='Não foi possível consultar agora. Tente novamente em instantes.';}
-  finally{button.disabled=false;button.textContent='Consultar pedido';}
-}
-
-const trackingFromUrl=new URLSearchParams(location.search).get('acompanhar');
-if(trackingFromUrl){const trackingInput=document.getElementById('trackingCodeInput');if(trackingInput){trackingInput.value=trackingFromUrl;document.getElementById('orderTracking').scrollIntoView({behavior:'auto',block:'start'});trackOrder();}}
-
-
 (async function(){
- const code=new URLSearchParams(location.search).get('codigo')||'';
- const input=document.createElement('input');input.value=code;
- const result=document.getElementById('trackingResult');
- if(!/^[A-HJ-NP-Z2-9]{12}$/i.test(code)&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code)){
-  result.className='error';result.textContent='Este link não contém um código válido. Peça à loja que reenvie seu link.';return;
+ const code=(new URLSearchParams(location.search).get("codigo")||"").trim().toUpperCase();
+ const result=document.getElementById("trackingResult");
+ if(!/^[A-HJ-NP-Z2-9]{12}$/.test(code)){
+  result.className="error";result.textContent="Este link está incompleto ou inválido. Peça à loja que envie novamente o link de acompanhamento.";return;
  }
+ result.textContent="Consultando seu pedido...";
  try{
-  const {data,error}=await db.rpc('track_order',{p_tracking_code:code});
-  if(error)throw error;
-  const order=Array.isArray(data)?data[0]:null;
-  if(!order){result.className='error';result.textContent='Não encontramos este pedido. Confira o link recebido com a loja.';return;}
-  const labels={recebido:'Pedido recebido',em_producao:'Em produção',pronto:'Pronto para retirada/entrega',entregue:'Pedido entregue',cancelado:'Pedido cancelado'};
-  const title=document.createElement('h2');title.textContent='Acompanhe seu pedido';result.appendChild(title);
-  const greeting=document.createElement('p');greeting.textContent='Olá, '+order.customer_name+'!';result.appendChild(greeting);
-  const status=document.createElement('p');status.className='status';status.textContent='Status: '+(labels[order.status]||'Em atualização');result.appendChild(status);
-  const updated=document.createElement('p');updated.className='muted';updated.textContent='Última atualização: '+new Date(order.status_updated_at).toLocaleString('pt-BR');result.appendChild(updated);
-  const heading=document.createElement('p');heading.textContent='Itens do pedido:';result.appendChild(heading);
-  const list=document.createElement('ul');
-  (Array.isArray(order.items)?order.items:[]).forEach(item=>{const li=document.createElement('li');li.textContent=(Number(item.quantity)||1)+' × '+String(item.name||'Produto');list.appendChild(li);});
-  result.appendChild(list);
- }catch(error){console.error(error);result.className='error';result.textContent='Não foi possível consultar seu pedido agora. Tente novamente mais tarde.';}
+  const response=await db.rpc("get_order_tracking",{p_code:code});
+  if(response.error)throw response.error;
+  const order=response.data;
+  if(!order){
+   result.className="error";
+   result.textContent="Não encontramos um pedido ativo com este código. Se a loja excluiu o pedido de teste ou enviou um link antigo, solicite um novo link.";
+   return;
+  }
+  const labels={recebido:"Pedido recebido",em_producao:"Em produção",pronto:"Pronto para retirada/entrega",entregue:"Pedido entregue",cancelado:"Pedido cancelado"};
+  const card=document.createElement("div");card.style.cssText="padding:16px;border:1px solid #eee3d0;border-radius:12px;background:#fffdf8;text-align:left";
+  const greeting=document.createElement("p");greeting.textContent="Olá, "+order.customer_name+"!";card.appendChild(greeting);
+  const status=document.createElement("p");status.className="status";status.textContent="Status: "+(labels[order.status]||"Em atualização");card.appendChild(status);
+  const updated=document.createElement("p");updated.className="muted";updated.textContent="Última atualização: "+new Date(order.status_updated_at).toLocaleString("pt-BR");card.appendChild(updated);
+  const heading=document.createElement("p");heading.textContent="Itens da sua encomenda:";card.appendChild(heading);
+  const list=document.createElement("ul");
+  (Array.isArray(order.items)?order.items:[]).forEach(item=>{const li=document.createElement("li");li.textContent=(Number(item.quantity)||1)+" × "+String(item.name||"Produto");list.appendChild(li);});
+  card.appendChild(list);result.replaceChildren(card);
+ }catch(error){
+  console.error("Falha na consulta de acompanhamento:",error);
+  result.className="error";
+  result.textContent="O serviço de acompanhamento está temporariamente indisponível. Envie esta mensagem à loja para que ela possa verificar: "+(error.message||error.code||"falha de conexão");
+ }
 })();
 </script>
 </body></html>
