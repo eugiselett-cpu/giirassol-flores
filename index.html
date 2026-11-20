@@ -595,7 +595,7 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .review-comment{font-size:14px;line-height:1.55;color:var(--ink);margin:0 0 12px;overflow-wrap:anywhere}
 .review-author{font-size:13px;font-weight:700;color:var(--green)}
 @media(max-width:700px){.reviews-section{width:calc(100% - 24px);padding:16px 12px;margin-bottom:24px}.reviews-grid{grid-template-columns:1fr;gap:9px}.review-card{padding:13px}}
-/* Floating WhatsApp contact */
+.reviews-summary{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:0 auto 18px;padding:12px 16px;width:fit-content;max-width:100%;border-radius:14px;background:var(--cream);color:var(--ink)}.reviews-summary strong{font-size:23px;color:var(--green)}.reviews-summary .review-stars{margin:0}.review-card{height:100%;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);box-shadow:0 4px 14px #00000008;transition:transform .2s,box-shadow .2s}.review-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px #00000010}.review-card .review-photo{width:100%;height:190px;object-fit:cover;border-radius:10px;margin:0 0 4px}.review-card .review-comment{flex:1}.review-card .review-author{padding-top:8px;border-top:1px solid var(--line)}.review-verified{font-size:11px;font-weight:600;color:var(--muted)}@media(max-width:700px){.review-card .review-photo{height:220px}.reviews-summary{gap:7px;padding:10px 12px}}\n/* Floating WhatsApp contact */
 .whatsapp-float{position:fixed;left:clamp(18px,4vw,54px);bottom:92px;z-index:24;display:flex;align-items:center;gap:9px;padding:13px 18px;border:0;border-radius:30px;background:#258b55;color:#fff;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 4px 16px #0003;cursor:pointer;transition:transform .2s,box-shadow .2s}
 .whatsapp-float:hover{transform:translateY(-2px);box-shadow:0 7px 20px #0003}
 .whatsapp-float svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -921,6 +921,19 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   </section>
 </div>
 
+<section class="reviews-section" id="reviewsSection" aria-labelledby="reviewsTitle" hidden>
+<h2 class="reviews-title" id="reviewsTitle">Carinho que floresce em cada pedido 🌻</h2>
+<p class="reviews-subtitle">Veja o que nossas clientes contam sobre suas experiências com a Giirassol Flores.</p>
+<div class="reviews-summary" id="reviewsSummary" aria-live="polite"></div><div class="reviews-grid" id="reviewsGrid"></div></section>
+<section class="review-submit-section" aria-labelledby="reviewSubmitTitle"><h2 id="reviewSubmitTitle">Sua experiência também importa 💛</h2>
+<p>Já recebeu seu pedido? Conte como foi. Sua avaliação será exibida após aprovação da loja.</p>
+<form id="customerReviewForm"><div class="review-submit-grid">
+<div><label for="customerReviewName">Seu nome</label><input id="customerReviewName" class="field" maxlength="80" autocomplete="name" required placeholder="Como podemos chamar você?"></div>
+<div><label for="customerReviewRating">Sua nota</label><select id="customerReviewRating" class="field" required><option value="5">★★★★★ — Amei!</option><option value="4">★★★★☆ — Gostei muito</option><option value="3">★★★☆☆ — Foi bom</option><option value="2">★★☆☆☆ — Pode melhorar</option><option value="1">★☆☆☆☆ — Não gostei</option></select></div>
+<div class="review-submit-full"><label for="customerReviewComment">Conte como foi sua experiência</label><textarea id="customerReviewComment" class="field" rows="3" maxlength="500" required placeholder="Conte o que achou das flores, do atendimento..."></textarea></div>
+<div class="review-submit-full"><label for="customerReviewPhoto">Foto do seu pedido (opcional)</label><input id="customerReviewPhoto" class="field" type="file" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG ou WEBP, até 5 MB.</small></div>
+<div class="review-submit-full"><button class="btn" id="sendCustomerReview" type="submit">Enviar minha avaliação</button><p class="review-submit-status" id="customerReviewStatus" role="status" aria-live="polite"></p></div>
+</div></form></section>
 <footer class="footer">
   <b>Giirassol Flores</b><br>
   Olho d’água, Boa Hora – PI<br>
@@ -1384,15 +1397,12 @@ async function loadCustomerReviews(){
     const {data,error}=await db.from('customer_reviews').select('customer_name,rating,comment,photo_url').eq('active',true).order('sort_order').order('created_at',{ascending:false});
     if(error)throw error;
     if(!data||!data.length){section.hidden=true;return;}
-    grid.innerHTML=data.map(r=>{
-      const card=document.createElement('article');card.className='review-card';
-      const stars=document.createElement('div');stars.className='review-stars';const rating=Math.max(0,Math.min(5,Number(r.rating)||0));stars.textContent='★'.repeat(rating)+'☆'.repeat(5-rating);
-      const comment=document.createElement('p');comment.className='review-comment';comment.textContent='“'+r.comment+'”';
-      const author=document.createElement('div');author.className='review-author';author.textContent=r.customer_name;
-      card.append(stars,comment);
-      if(r.photo_url){const photo=document.createElement('img');photo.src=r.photo_url;photo.alt='Foto enviada com a avaliação';photo.loading='lazy';photo.style.cssText='display:block;width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin:0 0 12px';card.append(photo);}
-      card.append(author);return card.outerHTML;
-    }).join('');
+    const ratings=data.map(r=>Math.max(0,Math.min(5,Number(r.rating)||0)));
+    const average=ratings.reduce((sum,value)=>sum+value,0)/ratings.length;
+    const summary=document.getElementById('reviewsSummary');
+    if(summary){summary.replaceChildren();const score=document.createElement('strong');score.textContent=average.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});const stars=document.createElement('span');stars.className='review-stars';stars.textContent='★'.repeat(Math.round(average))+'☆'.repeat(5-Math.round(average));const count=document.createElement('span');count.textContent=data.length+' '+(data.length===1?'avaliação publicada':'avaliações publicadas');summary.append(score,stars,count);}
+    grid.replaceChildren();
+    data.forEach(r=>{const card=document.createElement('article');card.className='review-card';const rating=Math.max(0,Math.min(5,Number(r.rating)||0));const stars=document.createElement('div');stars.className='review-stars';stars.setAttribute('aria-label',rating+' de 5 estrelas');stars.textContent='★'.repeat(rating)+'☆'.repeat(5-rating);if(r.photo_url){const photo=document.createElement('img');photo.className='review-photo';photo.src=r.photo_url;photo.alt='Foto enviada junto com a avaliação';photo.loading='lazy';photo.decoding='async';card.append(photo);}const comment=document.createElement('p');comment.className='review-comment';comment.textContent='“'+r.comment+'”';const author=document.createElement('div');author.className='review-author';author.textContent=r.customer_name;const verified=document.createElement('span');verified.className='review-verified';verified.textContent='· Avaliação publicada pela loja';card.append(stars,comment,author,verified);grid.append(card);});
     section.hidden=false;
   }catch(e){console.warn('Avaliações indisponíveis.',e);section.hidden=true;}
 }
