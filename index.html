@@ -1221,7 +1221,7 @@ async function trackOrder(){
   const result=document.getElementById('trackingResult');
   const button=document.getElementById('trackOrderButton');
   const code=(input.value||'').trim();
-  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code)){
+  if(!/^[A-HJ-NP-Z2-9]{12}$/i.test(code)&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code)){
     result.textContent='Confira o código de acompanhamento e tente novamente.';return;
   }
   button.disabled=true;button.textContent='Consultando...';result.textContent='Buscando seu pedido...';
@@ -1251,7 +1251,9 @@ if(trackingFromUrl){const trackingInput=document.getElementById('trackingCodeInp
 async function confirmCheckout(){
   if(!window.gfCheckoutUrl||window.gfSavingOrder)return;
   const whatsappWindow=window.open('about:blank','_blank');
-  const trackingCode=crypto.randomUUID();
+  const trackingAlphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const trackingBytes=crypto.getRandomValues(new Uint8Array(12));
+  const trackingCode=Array.from(trackingBytes,b=>trackingAlphabet[b&31]).join('');
   const button=document.querySelector('#orderConfirmation button[onclick="confirmCheckout()"]');
   window.gfSavingOrder=true;if(button){button.disabled=true;button.textContent='Registrando pedido...';}
   try{
@@ -1274,7 +1276,8 @@ async function confirmCheckout(){
       payment_method:document.getElementById('paymentMethod').value,
       lead_time:settings.lead,
       status:'recebido',
-      tracking_code:trackingCode
+      tracking_code:trackingCode,
+      tracking_code_short:trackingCode
     };
     const {error}=await db.from('orders').insert(payload);
     if(error)throw error;
