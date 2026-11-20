@@ -70,7 +70,7 @@ if(trackingFromUrl){const trackingInput=document.getElementById('trackingCodeInp
   const order=Array.isArray(data)?data[0]:null;
   if(!order){result.className='error';result.textContent='Não encontramos este pedido. Confira o link recebido com a loja.';return;}
   const labels={recebido:'Pedido recebido',em_producao:'Em produção',pronto:'Pronto para retirada/entrega',entregue:'Pedido entregue',cancelado:'Pedido cancelado'};
-  const title=document.createElement('h2');title.textContent='Pedido #'+order.order_number;result.appendChild(title);
+  const title=document.createElement('h2');title.textContent='Acompanhe seu pedido';result.appendChild(title);
   const greeting=document.createElement('p');greeting.textContent='Olá, '+order.customer_name+'!';result.appendChild(greeting);
   const status=document.createElement('p');status.className='status';status.textContent='Status: '+(labels[order.status]||'Em atualização');result.appendChild(status);
   const updated=document.createElement('p');updated.className='muted';updated.textContent='Última atualização: '+new Date(order.status_updated_at).toLocaleString('pt-BR');result.appendChild(updated);
