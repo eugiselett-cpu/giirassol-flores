@@ -1142,7 +1142,7 @@ function renderProducts() {
         <button class="pname-button" type="button" onclick="openProductDetails(${p.id})">${escapeProductText(p.name)}</button>
         ${description?'<p class="product-description">'+escapeProductText(description)+'</p>':''}
         <div class="price">${hasPromo?('<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br><b>'+money(p.promo_price)+'</b>'):(hasPrice?money(p.price):(p.category==='Flores'||p.category==='Flores especiais'?'':'Preço a cadastrar'))}</div>
-        ${isProductUnavailable(p)?'<div class="unavailable-label">Indisponível no momento<button class="waitlist-cta" type="button" data-waitlist-id="${p.id}">Avise-me quando voltar</button></div>':`<button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>`}
+        ${isProductUnavailable(p)?'<div class="unavailable-label">Indisponível no momento<button class="waitlist-cta" type="button" data-waitlist-id="'+p.id+'" data-product-name="'+escapeProductText(p.name)+'">Avise-me quando voltar</button></div>':`<button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>`}
       </div>
     </article>
   `;
