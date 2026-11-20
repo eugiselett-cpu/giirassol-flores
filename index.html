@@ -743,6 +743,16 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   </div>
 </section>
 
+<section class="store-info" id="orderTracking" aria-label="Acompanhar pedido" style="margin:24px auto;padding:22px;max-width:900px;background:#fff;border:1px solid var(--line);border-radius:16px">
+  <h2 class="store-info-title">Acompanhe sua encomenda 🌻</h2>
+  <p class="small">Digite o código recebido pelo WhatsApp para consultar o andamento do seu pedido.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <input id="trackingCodeInput" class="field" style="flex:1;min-width:220px;margin:0" placeholder="Cole aqui seu código de acompanhamento" autocomplete="off" spellcheck="false">
+    <button type="button" class="btn" id="trackOrderButton" onclick="trackOrder()">Consultar pedido</button>
+  </div>
+  <div id="trackingResult" aria-live="polite" style="margin-top:14px"></div>
+</section>
+
 <button class="whatsapp-float" type="button" onclick="contactStore()" aria-label="Falar com a Giirassol Flores pelo WhatsApp">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-5.1A8.5 8.5 0 1 1 20.5 11.5Z"/><path d="M9 8.5c.6 2.7 2.2 4.3 5 5"/><path d="M8.8 8.2c-.4.7-.3 1.5.2 2.2 1 1.6 2.3 2.7 4.1 3.4.7.3 1.5.1 2-.5l.5-.7-2-1.2-.7.7c-.9-.4-1.5-1-1.9-1.8l.5-.7-1.2-2-.7.6Z"/></svg>
   Fale conosco
@@ -1202,9 +1212,39 @@ function closeOrderConfirmation(){
   confirmation.setAttribute('aria-hidden','true');
 }
 
+async function trackOrder(){
+  const input=document.getElementById('trackingCodeInput');
+  const result=document.getElementById('trackingResult');
+  const button=document.getElementById('trackOrderButton');
+  const code=(input.value||'').trim();
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code)){
+    result.textContent='Confira o código de acompanhamento e tente novamente.';return;
+  }
+  button.disabled=true;button.textContent='Consultando...';result.textContent='Buscando seu pedido...';
+  try{
+    const {data,error}=await db.rpc('track_order',{p_tracking_code:code});
+    if(error)throw error;
+    const order=Array.isArray(data)?data[0]:null;
+    if(!order){result.textContent='Não encontramos um pedido com esse código. Confira se copiou o código completo.';return;}
+    const labels={recebido:'Pedido recebido',em_producao:'Em produção',pronto:'Pronto para retirada/entrega',entregue:'Pedido entregue',cancelado:'Pedido cancelado'};
+    const card=document.createElement('div');
+    card.style.cssText='padding:14px;border:1px solid var(--line);border-radius:12px;background:#fffdf8';
+    const title=document.createElement('h3');title.textContent='Pedido #'+order.order_number;card.appendChild(title);
+    const greeting=document.createElement('p');greeting.textContent='Olá, '+order.customer_name+'!';card.appendChild(greeting);
+    const status=document.createElement('p');status.style.fontWeight='bold';status.textContent='Status: '+(labels[order.status]||'Em atualização');card.appendChild(status);
+    const updated=document.createElement('p');updated.className='small';updated.textContent='Última atualização: '+new Date(order.status_updated_at).toLocaleString('pt-BR');card.appendChild(updated);
+    const heading=document.createElement('p');heading.textContent='Itens do pedido:';card.appendChild(heading);
+    const list=document.createElement('ul');
+    (Array.isArray(order.items)?order.items:[]).forEach(item=>{const li=document.createElement('li');li.textContent=(Number(item.quantity)||1)+' × '+String(item.name||'Produto');list.appendChild(li);});
+    card.appendChild(list);result.replaceChildren(card);
+  }catch(error){console.error('Falha ao consultar pedido',error);result.textContent='Não foi possível consultar agora. Tente novamente em instantes.';}
+  finally{button.disabled=false;button.textContent='Consultar pedido';}
+}
+
 async function confirmCheckout(){
   if(!window.gfCheckoutUrl||window.gfSavingOrder)return;
   const whatsappWindow=window.open('about:blank','_blank');
+  const trackingCode=crypto.randomUUID();
   const button=document.querySelector('#orderConfirmation button[onclick="confirmCheckout()"]');
   window.gfSavingOrder=true;if(button){button.disabled=true;button.textContent='Registrando pedido...';}
   try{
@@ -1225,12 +1265,16 @@ async function confirmCheckout(){
       delivery_address:deliveryMethod==='Entrega em domicílio'?document.getElementById('deliveryAddress').value.trim():null,
       payment_method:document.getElementById('paymentMethod').value,
       lead_time:settings.lead,
-      status:'recebido'
+      status:'recebido',
+      tracking_code:trackingCode
     };
     const {error}=await db.from('orders').insert(payload);
     if(error)throw error;
-    if(whatsappWindow&&!whatsappWindow.closed){whatsappWindow.location.href=window.gfCheckoutUrl;}
-    else{window.location.href=window.gfCheckoutUrl;}
+    const checkoutUrl=new URL(window.gfCheckoutUrl);
+    const checkoutMessage=(checkoutUrl.searchParams.get('text')||'')+'\n\n🔎 *Código de acompanhamento:* '+trackingCode+'\nAcompanhe seu pedido em: https://eugiselett-cpu.github.io/giirassol-flores/?acompanhar='+trackingCode;
+    checkoutUrl.searchParams.set('text',checkoutMessage);
+    if(whatsappWindow&&!whatsappWindow.closed){whatsappWindow.location.href=checkoutUrl.toString();}
+    else{window.location.href=checkoutUrl.toString();}
     closeOrderConfirmation();
   }catch(error){
     if(whatsappWindow&&!whatsappWindow.closed)whatsappWindow.close();
