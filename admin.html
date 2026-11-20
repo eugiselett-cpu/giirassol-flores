@@ -650,8 +650,10 @@ $("ordersAdminList").addEventListener("click",async e=>{
  const quickBtn=e.target.closest(".send-quick-message");
  if(quickBtn){
   const card=quickBtn.closest(".order-admin-card");if(!card)return;
-  const phone=(card.dataset.customerPhone||"").replace(/\D/g,"");
-  if(phone.length<10){alert("Este pedido não tem um WhatsApp válido cadastrado.");return;}
+  let phone=(card.dataset.customerPhone||"").replace(/\D/g,"");
+  const feedback=card.querySelector(".order-save-msg");
+  if(phone.length===10||phone.length===11)phone="55"+phone;
+  if(phone.length<12||phone.length>13){if(feedback)feedback.textContent="Cadastre um WhatsApp válido com DDD para este pedido.";return;}
   const name=card.querySelector("p b")?.textContent?.trim()||"tudo bem";
   const order=(card.querySelector("div:first-child b")?.textContent||"").trim();
   const type=card.querySelector(".quick-message-type")?.value||"received";
@@ -661,12 +663,15 @@ $("ordersAdminList").addEventListener("click",async e=>{
   const deliveryLabel=method.includes("retirada")?"retirada":"entrega";
   const dateText=deliveryDate?new Date(deliveryDate+"T12:00:00").toLocaleDateString("pt-BR"):"";
   const code=card.dataset.trackingCode||"";
-  const tracking=code?"\\nAcompanhe seu pedido por aqui: https://eugiselett-cpu.github.io/giirassol-flores/acompanhar.html?codigo="+encodeURIComponent(code):"";
+  const tracking=code?"\nAcompanhe seu pedido por aqui: https://eugiselett-cpu.github.io/giirassol-flores/acompanhar.html?codigo="+encodeURIComponent(code):"";
   const deliveryType=deliveryLabel==="retirada"?"retirada":"entrega";
   const previsao=deliveryDate?"A previsão combinada é "+(deliveryType==="retirada"?"para retirada":"para entrega")+" em "+dateText+(deliveryTime?" às "+deliveryTime:"")+".":"Entre em contato para combinarmos "+deliveryType+".";
   const template=whatsappMessageTemplates[type]||defaultWhatsappTemplates[type]||defaultWhatsappTemplates.received;
-  const msg=template.replace(/\{(nome|pedido|data|hora|tipo|previsao|link)\}/g,(match,key)=>({nome,pedido:order,data:dateText,hora:deliveryTime,tipo:deliveryType,previsao,link:tracking})[key]||"");
-  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank");
+  const messageText=template.replace(/\{(nome|pedido|data|hora|tipo|previsao|link)\}/g,(match,key)=>({nome,pedido:order,data:dateText,hora:deliveryTime,tipo:deliveryType,previsao,link:tracking})[key]||"");
+  const whatsappUrl="https://wa.me/"+phone+"?text="+encodeURIComponent(messageText);
+  const link=document.createElement("a");link.href=whatsappUrl;link.target="_blank";link.rel="noopener noreferrer";link.style.display="none";
+  document.body.appendChild(link);link.click();link.remove();
+  if(feedback)feedback.textContent="Mensagem preparada. Se o WhatsApp não abrir, permita pop-ups para este site.";
   return;
  }
  const notifyBtn=e.target.closest(".notify-production");
