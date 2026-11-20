@@ -121,7 +121,7 @@ $("ordersAdminList").addEventListener("click",async e=>{
   const code=card.dataset.trackingCode||"";
   if(!phone||!code){alert("Este pedido precisa ter WhatsApp e código de acompanhamento cadastrados.");return;}
   const orderTitle=card.querySelector("b").textContent;
-  const link="https://eugiselett-cpu.github.io/giirassol-flores/?acompanhar="+encodeURIComponent(code);
+  const link="https://eugiselett-cpu.github.io/giirassol-flores/acompanhar.html?codigo="+encodeURIComponent(code);
   const message="Olá! 🌻 Seu "+orderTitle+" entrou em produção! Você já pode acompanhar o andamento por este link: "+link;
   window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),"_blank");
   return;
