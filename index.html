@@ -1079,9 +1079,14 @@ function persist() {
 
 function categoryIcon(c){if(c==='Todos')return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';const emojis={Flores:'🌻','Flores especiais':'🌷','Buquês':'💐',Adicionais:'🎁',Pelúcias:'🧸'};return '<span class="tab-emoji" aria-hidden="true">'+(emojis[c]||'')+'</span>'}
 function renderTabs() {
-  document.getElementById('tabs').innerHTML = cats.map(c =>
-    `<button class="tab ${active===c?'active':''}" onclick="setCategory('${c}')">${categoryIcon(c)}<span>${c}</span></button>`
+  const tabs=document.getElementById('tabs');
+  if(!tabs)return;
+  tabs.innerHTML = cats.map(c =>
+    `<button type="button" class="tab ${active===c?'active':''}" data-category="${escapeProductText(c)}">${categoryIcon(c)}<span>${escapeProductText(c)}</span></button>`
   ).join('');
+  tabs.querySelectorAll('[data-category]').forEach(button=>{
+    button.addEventListener('click',()=>setCategory(button.dataset.category));
+  });
 }
 
 function setCategory(c) {
@@ -1106,12 +1111,12 @@ function renderPromotions(term){
   section.classList.add("visible");
   grid.innerHTML=offers.map(p=>`
     <article class="promotion-card">
-      ${p.image?`<img src="${p.image}" alt="${p.name}" loading="lazy">`:`<div class="noimage">Foto a adicionar</div>`}
+      ${p.image?`<img src="${escapeProductText(p.image)}" alt="${escapeProductText(p.name)}" loading="lazy">`:`<div class="noimage">Foto a adicionar</div>`}
       <div class="promotion-card-body">
-        <div class="promotion-card-name">${p.name}</div>
+        <div class="promotion-card-name">${escapeProductText(p.name)}</div>
         <div class="promotion-prices"><span class="old-price">${money(p.price)}</span><span class="sale-tag">PROMOÇÃO</span><br><b>${money(p.promo_price)}</b></div>
         ${isProductUnavailable(p)?'<div class="unavailable-label">Indisponível no momento</div>':`${p.stock_quantity!==null&&p.stock_quantity!==undefined&&Number(p.stock_quantity)<=3?'<div class="stock-warning">Últimas '+Number(p.stock_quantity)+' unidade(s)</div>':''}<button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>`}
-        <button class="product-share" type="button" onclick="shareProduct(${p.id})" aria-label="Compartilhar ${p.name} pelo WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg>Compartilhar</button>
+        <button class="product-share" type="button" onclick="shareProduct(${p.id})" aria-label="Compartilhar ${escapeProductText(p.name)} pelo WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg>Compartilhar</button>
       </div>
     </article>
   `).join("");
@@ -1125,7 +1130,7 @@ function renderFeaturedProducts(term){
   section.hidden=false;
   grid.innerHTML=items.slice(0,8).map(p=>
     '<article class="featured-card"><button type="button" class="featured-image" onclick="openProductDetails('+p.id+')" aria-label="Ver '+escapeProductText(p.name)+'">'+
-    (p.image?'<img src="'+p.image+'" alt="'+escapeProductText(p.name)+'" loading="lazy">':'<span>Foto a adicionar</span>')+
+    (p.image?'<img src="'+escapeProductText(p.image)+'" alt="'+escapeProductText(p.name)+'" loading="lazy">':'<span>Foto a adicionar</span>')+
     '</button><div class="featured-card-body"><span class="featured-category">'+escapeProductText(p.category)+'</span><h3>'+escapeProductText(p.name)+'</h3><p>'+
     (p.promo_active&&p.promo_price!=null?money(p.promo_price):(p.price!==null&&p.price!==''&&p.price!==undefined?money(p.price):'Valor a confirmar'))+
     '</p><button type="button" class="featured-detail" onclick="openProductDetails('+p.id+')">Conhecer produto</button></div></article>'
@@ -1183,11 +1188,11 @@ function openProductDetails(id){
   const p=products.find(x=>String(x.id)===String(id));if(!p)return;
   const hasPrice=p.price!==null&&p.price!==''&&p.price!==undefined;
   const priceHtml=p.promo_active&&p.promo_price!=null?'<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br>'+money(p.promo_price):(hasPrice?money(p.price):'Valor a confirmar');
-  const imageHtml=p.image?'<img class="product-dialog-image" src="'+p.image+'" alt="'+p.name+'">':'<div class="noimage product-dialog-image">Foto a adicionar</div>';
+  const imageHtml=p.image?'<img class="product-dialog-image" src="'+escapeProductText(p.image)+'" alt="'+escapeProductText(p.name)+'">':'<div class="noimage product-dialog-image">Foto a adicionar</div>';
   const note=(p.category==='Flores'||p.category==='Flores especiais')?'O valor desta peça é confirmado pelo atendimento.':'Consulte a disponibilidade pelo atendimento.';
   const outOfStock=p.stock_quantity!==null&&p.stock_quantity!==undefined&&Number(p.stock_quantity)<=0;const availabilityHtml=p.available===false||outOfStock?'<div class="unavailable-label">Indisponível no momento<button class="waitlist-cta" type="button" data-waitlist-id="'+p.id+'" data-product-name="'+escapeProductText(p.name)+'">Avise-me quando voltar</button></div>':'<button class="product-dialog-add" type="button" onclick="add('+p.id+',null);closeProductDetails()">Adicionar ao carrinho</button>';
   const descriptionHtml=p.description?'<div class="product-dialog-description">'+escapeProductText(p.description).replace(/\n/g,'<br>')+'</div>':'';
-  document.getElementById('productDialogContent').innerHTML=imageHtml+'<h2 class="product-dialog-name" id="productDialogName">'+p.name+'</h2><div class="product-dialog-category">'+p.category+'</div><div class="product-dialog-price">'+priceHtml+'</div>'+descriptionHtml+'<p class="product-dialog-note">'+note+' Encomendas com '+settings.lead+'.</p>'+availabilityHtml+'<button class="product-share product-dialog-share" type="button" onclick="shareProduct('+p.id+')">Compartilhar pelo WhatsApp</button>';
+  document.getElementById('productDialogContent').innerHTML=imageHtml+'<h2 class="product-dialog-name" id="productDialogName">'+escapeProductText(p.name)+'</h2><div class="product-dialog-category">'+escapeProductText(p.category)+'</div><div class="product-dialog-price">'+priceHtml+'</div>'+descriptionHtml+'<p class="product-dialog-note">'+note+' Encomendas com '+escapeProductText(settings.lead)+'.</p>'+availabilityHtml+'<button class="product-share product-dialog-share" type="button" onclick="shareProduct('+p.id+')">Compartilhar pelo WhatsApp</button>';
   const dialog=document.getElementById('productDialog');dialog.classList.add('open');dialog.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
 }
 function closeProductDetails(){const dialog=document.getElementById('productDialog');if(!dialog)return;dialog.classList.remove('open');dialog.setAttribute('aria-hidden','true');document.body.style.overflow='';}
