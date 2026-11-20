@@ -665,6 +665,26 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .hero-inner>img.hero-background{display:block;z-index:0}
 @media(max-width:700px){header.brand-header{overflow:hidden!important;padding-left:58px!important;padding-right:58px!important}.header-decor{left:0!important;right:auto!important;top:0!important;bottom:0!important;width:clamp(112px,23vw,170px)!important;height:100%!important;object-fit:cover!important;object-position:left center!important}.header-decor.decor-right{left:auto!important;right:0!important;object-position:right center!important}.hero{padding:0!important;margin:0 auto 14px!important}.hero-frame-image{width:100vw!important;aspect-ratio:1080/150!important;object-fit:cover!important}.hero-inner{width:100vw!important;aspect-ratio:16/7!important;overflow:hidden!important}}
 @media(min-width:701px){.hero-frame-image{width:100vw!important;aspect-ratio:1080/150!important}.hero-inner{max-width:1120px;margin:0 auto!important}}
+
+/* Produtos em destaque */
+.featured-section{max-width:1120px;margin:24px auto 28px;padding:0 18px}
+.featured-heading{margin:0 0 14px;text-align:center}
+.featured-heading>span{font-size:10px;letter-spacing:.14em;font-weight:700;color:var(--green)}
+.featured-heading h2{margin:5px 0;color:var(--ink);font:clamp(22px,3vw,29px) Georgia,serif}
+.featured-heading h2 b{color:var(--gold)}
+.featured-heading p{margin:0;color:var(--muted);font-size:13px}
+.featured-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.featured-card{background:var(--paper,#fff);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.featured-image{display:block;width:100%;height:170px;padding:0;border:0;background:#fff;cursor:pointer}
+.featured-image img{width:100%;height:100%;object-fit:contain;padding:8px}
+.featured-image span{display:grid;place-items:center;height:100%;color:var(--muted);font-size:12px}
+.featured-card-body{padding:11px;display:flex;flex-direction:column;gap:7px;flex:1}
+.featured-category{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.featured-card h3{font-size:14px;line-height:1.3;margin:0;color:var(--ink)}
+.featured-card p{margin:0;font-weight:700;color:var(--green);font-size:14px}
+.featured-detail{margin-top:auto;border:0;border-radius:9px;padding:9px;background:var(--green);color:#fff;font-weight:700;cursor:pointer}
+@media(max-width:700px){.featured-section{padding:0 12px}.featured-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.featured-image{height:145px}.featured-card-body{padding:9px}}
+
 </style>
 </head>
 
@@ -703,6 +723,10 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 <section class="promotions-section" id="promotionsSection" aria-label="Ofertas especiais">
   <h2 class="promotions-heading">Ofertas especiais <span>POR TEMPO LIMITADO</span></h2>
   <div class="promotions-grid" id="promotionsGrid"></div>
+</section>
+<section class="featured-section" id="featuredSection" aria-label="Produtos em destaque" hidden>
+  <div class="featured-heading"><span>ESCOLHAS ESPECIAIS</span><h2>Produtos em destaque <b aria-hidden="true">✦</b></h2><p>Conheça alguns dos nossos queridinhos.</p></div>
+  <div class="featured-grid" id="featuredGrid"></div>
 </section>
 <main class="wrap">
   <p class="intro">Escolha seus favoritos e monte seu presente especial.</p>
@@ -958,10 +982,27 @@ function renderPromotions(term){
     </article>
   `).join("");
 }
+function renderFeaturedProducts(term){
+  const section=document.getElementById('featuredSection'),grid=document.getElementById('featuredGrid');
+  if(!section||!grid)return;
+  const query=String(term||'').trim().toLocaleLowerCase('pt-BR');
+  const items=products.filter(p=>p.featured===true&&p.active!==false&&p.available!==false&&(!query||[p.name,p.category].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR').includes(query)));
+  if(favoritesOnly||active!=='Todos'||!items.length){section.hidden=true;grid.innerHTML='';return;}
+  section.hidden=false;
+  grid.innerHTML=items.slice(0,8).map(p=>
+    '<article class="featured-card"><button type="button" class="featured-image" onclick="openProductDetails('+p.id+')" aria-label="Ver '+escapeProductText(p.name)+'">'+
+    (p.image?'<img src="'+p.image+'" alt="'+escapeProductText(p.name)+'" loading="lazy">':'<span>Foto a adicionar</span>')+
+    '</button><div class="featured-card-body"><span class="featured-category">'+escapeProductText(p.category)+'</span><h3>'+escapeProductText(p.name)+'</h3><p>'+
+    (p.promo_active&&p.promo_price!=null?money(p.promo_price):(p.price!==null&&p.price!==''&&p.price!==undefined?money(p.price):'Valor a confirmar'))+
+    '</p><button type="button" class="featured-detail" onclick="openProductDetails('+p.id+')">Conhecer produto</button></div></article>'
+  ).join('');
+}
+
 function renderProducts() {
   updateFavoritesTools();
   const term=String(document.getElementById('mobileSearchInput')?.value||'').trim().toLocaleLowerCase('pt-BR');
   renderPromotions(term);
+  renderFeaturedProducts(term);
   const list=products.filter(p=>{
     const inCategory=active==='Todos'||p.category===active;
     const isFavorite=favorites.includes(String(p.id));
