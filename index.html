@@ -1457,18 +1457,18 @@ document.getElementById('customerReviewForm')?.addEventListener('submit',async e
   if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024)){status.textContent='Escolha uma imagem JPG, PNG ou WEBP de até 5 MB.';return;}
   button.disabled=true;status.textContent='Enviando sua avaliação...';
   try{
-    let photoUrl=null;
+    let photoUrl=null,uploadedPhotoPath=null;
     if(file){
       const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
-      const path='review-photos/'+Date.now()+'-'+Math.random().toString(36).slice(2,10)+'.'+ext;
-      const {error:uploadError}=await db.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false});
+      uploadedPhotoPath='review-photos/'+Date.now()+'-'+Math.random().toString(36).slice(2,10)+'.'+ext;
+      const {error:uploadError}=await db.storage.from('product-images').upload(uploadedPhotoPath,file,{contentType:file.type,upsert:false});
       if(uploadError)throw uploadError;
-      photoUrl=db.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+      photoUrl=db.storage.from('product-images').getPublicUrl(uploadedPhotoPath).data.publicUrl;
     }
     const {error}=await db.from('customer_reviews').insert({customer_name:name,rating,comment,photo_url:photoUrl,active:false});
     if(error)throw error;
     form.reset();status.textContent='Obrigada! Sua avaliação foi enviada e aparecerá no site depois da aprovação da loja. 🌻';
-  }catch(error){console.error(error);status.textContent='Não foi possível enviar agora. Tente novamente em alguns instantes.';}
+  }catch(error){console.error(error);if(uploadedPhotoPath){try{const {error:cleanupError}=await db.storage.from('product-images').remove([uploadedPhotoPath]);if(cleanupError)console.warn('Não foi possível remover a foto temporária:',cleanupError);}catch(cleanupError){console.warn('Falha ao limpar a foto temporária:',cleanupError);}}status.textContent='Não foi possível enviar agora. Tente novamente em alguns instantes.';}
   finally{button.disabled=false;}
 });
 
