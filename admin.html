@@ -24,6 +24,16 @@
 <p><button class="btn" id="saveCampaign" type="button">Programar campanha</button> <span id="campaignMsg" class="muted" role="status" aria-live="polite"></span></p>
 <h3>Campanhas cadastradas</h3><div id="campaignList"><p class="muted">Carregando campanhas...</p></div>
 </div>
+<div class="card" id="couponsAdmin">
+<h2>Cupons de desconto 🎟️</h2>
+<p class="muted">Crie códigos promocionais para suas clientes. O desconto é aplicado ao total dos itens com preço cadastrado; flores com valor a confirmar e frete ficam fora do cálculo.</p>
+<div class="row"><div><label>Código do cupom</label><input id="couponCodeAdmin" class="field" maxlength="30" placeholder="Ex.: GIIRASSOL10"></div><div><label>Tipo de desconto</label><select id="couponTypeAdmin" class="field"><option value="percentage">Porcentagem (%)</option><option value="fixed">Valor fixo (R$)</option></select></div></div>
+<div class="row"><div><label>Valor do desconto</label><input id="couponValueAdmin" class="field" type="number" min="0.01" step="0.01" placeholder="Ex.: 10"></div><div><label>Pedido mínimo (R$)</label><input id="couponMinimumAdmin" class="field" type="number" min="0" step="0.01" value="0"></div></div>
+<div class="row"><div><label>Válido a partir de</label><input id="couponStartAdmin" class="field" type="date"></div><div><label>Válido até</label><input id="couponEndAdmin" class="field" type="date"></div></div>
+<div class="row"><div><label>Limite de utilizações (vazio = ilimitado)</label><input id="couponLimitAdmin" class="field" type="number" min="1" step="1" placeholder="Ilimitado"></div></div>
+<p><button class="btn" id="saveCouponAdmin" type="button">Criar cupom</button> <span id="couponAdminMsg" class="muted" role="status" aria-live="polite"></span></p>
+<h3>Cupons cadastrados</h3><div id="couponAdminList"><p class="muted">Carregando cupons...</p></div>
+</div>
 <div class="card" id="reviewsAdmin">
 <h2>Avaliações de clientes</h2>
 <p class="muted">Cadastre somente depoimentos reais, com autorização da cliente. Marque “Exibir na loja” para publicar no site.</p>
@@ -48,7 +58,32 @@ $("loginBtn").onclick=async()=>{message("loginMsg","Verificando acesso...");cons
 $("signupBtn").onclick=async()=>{const email=$("email").value.trim().toLowerCase();if(email!==OWNER){message("loginMsg","Use o e-mail autorizado da proprietária.");return}if(!$("password").value||$("password").value.length<8){message("loginMsg","Crie uma senha com pelo menos 8 caracteres.");return}message("loginMsg","Enviando confirmação para seu e-mail...");const redirect="https://eugiselett-cpu.github.io/giirassol-flores/admin.html";let {error}=await db.auth.signUp({email,password:$("password").value,options:{emailRedirectTo:redirect}});if(error&&/already registered|already been registered|user already/i.test(error.message)){const resent=await db.auth.resend({type:"signup",email,options:{emailRedirectTo:redirect}});error=resent.error}message("loginMsg",error?"Não foi possível enviar a confirmação: "+error.message:"Pronto! Confira sua caixa de entrada e use o e-mail mais recente. Depois volte aqui para entrar.")};
 $("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
 $("logout").onclick=()=>db.auth.signOut().then(()=>location.reload());
-async function loadAll(){await Promise.all([loadProducts(),loadSettings(),loadReviews(),loadOrders()])}
+
+async function loadCouponsAdmin(){
+ const box=$("couponAdminList");if(!box)return;
+ const {data,error}=await db.from("coupons").select("*").order("created_at",{ascending:false});
+ if(error){box.innerHTML='<p class="muted">Falha ao carregar cupons: '+esc(error.message)+'</p>';return;}
+ const rows=data||[];
+ if(!rows.length){box.innerHTML='<p class="muted">Nenhum cupom cadastrado.</p>';return;}
+ box.innerHTML=rows.map(c=>'<div style="padding:12px;border:1px solid var(--line,#ddd);border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><strong>'+esc(c.code)+'</strong> · '+(c.discount_type==='percentage'?Number(c.discount_value)+'%':'R$ '+Number(c.discount_value).toFixed(2).replace('.',','))+'<div class="muted">Pedido mínimo: R$ '+Number(c.minimum_order_amount||0).toFixed(2).replace('.',',')+' · Usos: '+c.usage_count+(c.usage_limit===null?'':' / '+c.usage_limit)+' · '+c.starts_at.split('-').reverse().join('/')+' a '+c.ends_at.split('-').reverse().join('/')+'</div><div class="muted">'+(c.active?'Ativo':'Desativado')+'</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn light toggleCouponAdmin" data-id="'+c.id+'" data-active="'+c.active+'">'+(c.active?'Desativar':'Ativar')+'</button><button class="btn danger deleteCouponAdmin" data-id="'+c.id+'" data-code="'+esc(c.code)+'">Excluir</button></div></div>').join("");
+ box.querySelectorAll(".toggleCouponAdmin").forEach(btn=>btn.onclick=async()=>{const {error}=await db.from("coupons").update({active:btn.dataset.active!=="true"}).eq("id",btn.dataset.id);if(error){message("couponAdminMsg","Falha ao alterar: "+error.message);return;}await loadCouponsAdmin();});
+ box.querySelectorAll(".deleteCouponAdmin").forEach(btn=>btn.onclick=async()=>{if(!confirm("Excluir o cupom "+btn.dataset.code+"?"))return;const {error}=await db.from("coupons").delete().eq("id",btn.dataset.id);if(error){message("couponAdminMsg","Falha ao excluir: "+error.message);return;}message("couponAdminMsg","Cupom excluído.");await loadCouponsAdmin();});
+}
+$("saveCouponAdmin").onclick=async()=>{
+ const code=$("couponCodeAdmin").value.trim().toUpperCase(),type=$("couponTypeAdmin").value,value=Number($("couponValueAdmin").value),minimum=Number($("couponMinimumAdmin").value||0),start=$("couponStartAdmin").value,end=$("couponEndAdmin").value,limit=$("couponLimitAdmin").value?Number($("couponLimitAdmin").value):null;
+ if(!/^[A-Z0-9_-]{3,30}$/.test(code)){message("couponAdminMsg","Use de 3 a 30 caracteres: letras, números, hífen ou sublinhado.");return;}
+ if(!Number.isFinite(value)||value<=0||(type==="percentage"&&value>100)){message("couponAdminMsg","Informe um desconto válido (percentual até 100%).");return;}
+ if(!Number.isFinite(minimum)||minimum<0||!start||!end||end<start){message("couponAdminMsg","Confira o pedido mínimo e o período de validade.");return;}
+ if(limit!==null&&(!Number.isInteger(limit)||limit<1)){message("couponAdminMsg","O limite deve ser um número inteiro maior que zero.");return;}
+ const btn=$("saveCouponAdmin");btn.disabled=true;message("couponAdminMsg","Salvando cupom...");
+ const {error}=await db.from("coupons").insert({code,discount_type:type,discount_value:value,minimum_order_amount:minimum,starts_at:start,ends_at:end,usage_limit:limit});
+ btn.disabled=false;
+ if(error){message("couponAdminMsg",error.code==="23505"?"Já existe um cupom com esse código.":"Não foi possível salvar: "+error.message);return;}
+ ["couponCodeAdmin","couponValueAdmin","couponMinimumAdmin","couponStartAdmin","couponEndAdmin","couponLimitAdmin"].forEach(id=>$(id).value="");
+ $("couponMinimumAdmin").value="0";message("couponAdminMsg","Cupom criado com sucesso!");await loadCouponsAdmin();
+};
+
+async function loadAll(){await Promise.all([loadProducts(),loadSettings(),loadReviews(),loadOrders(),loadCouponsAdmin()])}
 $("refreshDashboard").onclick=async()=>{
  const btn=$("refreshDashboard"),label=btn.textContent;
  btn.disabled=true;btn.textContent="Atualizando...";

@@ -864,6 +864,7 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   <div id="cartColorPreference"></div>
 
   <div id="cartItems"></div>
+  <div class="coupon-box" style="padding:12px 0;border-top:1px solid var(--line);margin-top:8px"><label for="couponInput"><strong>Tem um cupom de desconto?</strong></label><div style="display:flex;gap:8px"><input id="couponInput" class="field" style="margin:5px 0;flex:1;text-transform:uppercase" maxlength="30" placeholder="Digite seu cupom"><button class="btn" type="button" onclick="applyStoreCoupon()">Aplicar</button></div><p id="couponStatus" class="notice" role="status" aria-live="polite"></p></div>
 
   <label>Seu nome</label>
   <input id="customer" class="field" placeholder="Como podemos chamar você?">
@@ -1022,6 +1023,7 @@ let settings = JSON.parse(localStorage.getItem('gf_settings') || 'null') || {
 if(!settings.phone) settings.phone='5586981748569';
 
 let cart = JSON.parse(localStorage.getItem('gf_cart') || '{}');
+let appliedCoupon = null;
 let cartColorPreference = JSON.parse(localStorage.getItem('gf_cart_color_preference') || '{"tones":[],"custom":""}');
 const flowerColorTones=['Tons de vermelho','Tons de rosa','Tons de azul','Tons de lilás e roxo','Tons de amarelo','Tons claros e branco','Tons de laranja','Tons de verde'];
 function saveCartColorPreference(){localStorage.setItem('gf_cart_color_preference',JSON.stringify(cartColorPreference));}
@@ -1218,9 +1220,31 @@ function renderCart() {
     s+((x.p.price!==null&&x.p.price!==''&&x.p.price!==undefined)?(x.p.promo_active&&x.p.promo_price!=null?Number(x.p.promo_price):Number(x.p.price))*x.q:0),0
   );
 
-  document.getElementById('total').textContent =
-    'Total dos itens com preço: '+money(total);
+  const discount=appliedCoupon?Math.min(total,Number((appliedCoupon.discount_type==='percentage'?total*appliedCoupon.discount_value/100:appliedCoupon.discount_value).toFixed(2))):0;
+  document.getElementById('total').innerHTML = 'Total dos itens com preço: '+money(total)+(discount?' <div style="color:#287344;margin-top:6px">Cupom '+escapeProductText(appliedCoupon.code)+': −'+money(discount)+'</div><div style="margin-top:4px">Total parcial com desconto: '+money(total-discount)+'</div>':'');
 }
+
+
+async function applyStoreCoupon(){
+ const input=document.getElementById('couponInput'),status=document.getElementById('couponStatus'),code=(input.value||'').trim().toUpperCase();
+ if(!code){status.textContent='Digite o código do cupom.';return;}
+ const ids=Object.keys(cart);const subtotal=ids.reduce((sum,id)=>{const p=products.find(x=>String(x.id)===String(id));return sum+(p&&p.price!==null&&p.price!==''&&p.price!==undefined?(p.promo_active&&p.promo_price!=null?Number(p.promo_price):Number(p.price))*cart[id]:0);},0);
+ status.textContent='Verificando cupom...';
+ try{
+  const {data,error}=await db.from('coupons').select('code,discount_type,discount_value,minimum_order_amount,starts_at,ends_at,usage_limit,usage_count,active').eq('code',code).eq('active',true).maybeSingle();
+  if(error)throw error;
+  if(!data)throw new Error('Cupom não encontrado ou desativado.');
+  const today=new Date();const key=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  if(key<data.starts_at||key>data.ends_at)throw new Error('Este cupom ainda não está válido ou já expirou.');
+  if(data.usage_limit!==null&&Number(data.usage_count)>=Number(data.usage_limit))throw new Error('Este cupom atingiu o limite de utilizações.');
+  if(subtotal<Number(data.minimum_order_amount||0))throw new Error('O pedido mínimo para este cupom é '+money(data.minimum_order_amount)+'.');
+  const amount=data.discount_type==='percentage'?Math.round(subtotal*Number(data.discount_value))/100:Math.min(subtotal,Number(data.discount_value));
+  appliedCoupon={code:data.code,discount_type:data.discount_type,discount_value:Number(data.discount_value)};
+  status.textContent='Cupom aplicado! Você economiza '+money(appliedCoupon.discount_type==='percentage'?subtotal*appliedCoupon.discount_value/100:Math.min(subtotal,appliedCoupon.discount_value))+'.';
+  status.style.color='#287344';renderCart();
+ }catch(e){appliedCoupon=null;status.textContent=e.message||'Não foi possível validar o cupom.';status.style.color='#a33';renderCart();}
+}
+function clearStoreCoupon(){appliedCoupon=null;const input=document.getElementById('couponInput'),status=document.getElementById('couponStatus');if(input)input.value='';if(status)status.textContent='';renderCart();}
 
 function toggleMobileMenu(open){const drawer=document.getElementById('mobileDrawer'),shade=document.getElementById('mobileMenuShade');if(!drawer||!shade)return;drawer.classList.toggle('open',!!open);shade.classList.toggle('open',!!open)}
 function toggleSearch(){const box=document.getElementById('mobileSearch');if(!box)return;box.classList.toggle('open');if(box.classList.contains('open'))document.getElementById('mobileSearchInput').focus()}
@@ -1296,9 +1320,11 @@ function checkout() {
     return s+(p&&p.price!==null&&p.price!==''&&p.price!==undefined?(p.promo_active&&p.promo_price!=null?Number(p.promo_price):Number(p.price))*cart[id]:0);
   },0);
 
+  const couponDiscount=appliedCoupon?Math.min(total,Number((appliedCoupon.discount_type==='percentage'?total*appliedCoupon.discount_value/100:appliedCoupon.discount_value).toFixed(2))):0;
+  if(appliedCoupon){lines.push('','🎟️ *Cupom:* '+appliedCoupon.code,'💚 *Desconto:* −'+money(couponDiscount));}
   lines.push(
     '',
-    '💰 *Total parcial dos itens com preço:* '+money(total),
+    '💰 *Total parcial dos itens com preço:* '+money(total-couponDiscount)+' (antes do desconto: '+money(total)+')',
     '_Flores e flores especiais têm valor confirmado no atendimento._',
     '',
     '📝 *Detalhes e personalização:* '+(document.getElementById('notes').value||'Nenhuma'),
@@ -1351,6 +1377,7 @@ async function confirmCheckout(){
       customer_name:document.getElementById('customer').value.trim()||'Não informado',
       customer_phone:document.getElementById('customerPhone').value.trim()||null,
       items:orderItems,partial_total:total,
+      coupon_code:appliedCoupon?appliedCoupon.code:null,
       notes:document.getElementById('notes').value.trim()||null,
       color_preference:cartColorPreference,
       delivery_method:deliveryMethod,
