@@ -685,6 +685,38 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 .featured-detail{margin-top:auto;border:0;border-radius:9px;padding:9px;background:var(--green);color:#fff;font-weight:700;cursor:pointer}
 @media(max-width:700px){.featured-section{padding:0 12px}.featured-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.featured-image{height:145px}.featured-card-body{padding:9px}}
 
+
+/* Product cards: clearer hierarchy, image treatment and purchase action */
+.product{border-color:#eee4d3;box-shadow:0 3px 14px #65512a0a;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.product:hover{transform:translateY(-3px);border-color:#d9c99f;box-shadow:0 9px 24px #65512a16}
+.detail-image-trigger{position:relative;overflow:hidden}
+.detail-image-trigger img,.detail-image-trigger .noimage{transition:transform .35s ease}
+.product:hover .detail-image-trigger img{transform:scale(1.035)}
+.product-photo-label{position:absolute;left:10px;top:10px;z-index:1;padding:6px 9px;border-radius:20px;background:#fffdf2eF;color:#80652c;font-size:10px;font-weight:800;letter-spacing:.04em;box-shadow:0 2px 8px #00000012}
+.product-photo-label.promo{background:#a94f50;color:#fff}
+.product-photo-label.unavailable{background:#f2e8e3;color:#8b5146}
+.pbody{gap:7px;padding:12px}
+.product-category{font-size:10px;line-height:1.2;text-transform:uppercase;letter-spacing:.09em;color:#8a7b5d;font-weight:700}
+.pname-button{font-size:14px;line-height:1.35;min-height:38px}
+.product-description{font-size:11px;line-height:1.45;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:31px}
+.price{font-size:14px;line-height:1.45;color:var(--green);font-weight:700;min-height:20px}
+.price .old-price{font-size:11px;font-weight:400}
+.price .sale-tag{margin-left:3px;vertical-align:middle}
+.add{width:100%;min-height:42px;font-size:12px;letter-spacing:.01em;box-shadow:0 2px 7px #687c5226}
+.add:hover{filter:brightness(1.06)}
+.product .unavailable-label{margin-top:auto}
+@media(max-width:700px){
+ .product{border-radius:15px}
+ .pbody{padding:10px;gap:6px}
+ .product-category{font-size:9px}
+ .pname-button{font-size:13px;min-height:35px}
+ .product-description{font-size:10px;min-height:29px}
+ .price{font-size:13px}
+ .product-photo-label{left:8px;top:8px;padding:5px 7px;font-size:9px}
+ .add{min-height:43px;font-size:11px;padding:10px 5px}
+}
+@media(prefers-reduced-motion:reduce){.product,.detail-image-trigger img{transition:none}.product:hover{transform:none}}
+
 </style>
 </head>
 
@@ -1003,24 +1035,30 @@ function renderProducts() {
     grid.innerHTML='<p class="notice empty-state">'+message+'</p>';
     return;
   }
-  grid.innerHTML=list.map(p=>`
+  grid.innerHTML=list.map(p=>{
+    const hasPromo=p.promo_active&&p.promo_price!==null&&p.promo_price!==undefined&&p.promo_price!==''&&Number.isFinite(Number(p.promo_price));
+    const hasPrice=p.price!==null&&p.price!==''&&p.price!==undefined;
+    const description=String(p.description||'').trim();
+    return `
     <article class="product">
       <button class="favorite-btn ${favorites.includes(String(p.id))?'is-favorite':''}" type="button" onclick="toggleFavorite('${p.id}',this)" aria-label="Favoritar produto"><svg viewBox="0 0 24 24"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.8 4.8 0 0 1 12 6.4a4.8 4.8 0 0 1 8.8 2.4Z"/></svg></button>
-      <button class="detail-image-trigger" type="button" onclick="openProductDetails(${p.id})" aria-label="Ver detalhes de ${p.name}">
+      <button class="detail-image-trigger" type="button" onclick="openProductDetails(${p.id})" aria-label="Ver detalhes de ${escapeProductText(p.name)}">
+        ${p.available===false?'<span class="product-photo-label unavailable">INDISPONÍVEL</span>':(hasPromo?'<span class="product-photo-label promo">OFERTA ESPECIAL</span>':'')}
         ${p.image
-          ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+          ? `<img src="${p.image}" alt="${escapeProductText(p.name)}" loading="lazy">`
           : `<div class="noimage">Foto a adicionar</div>`
         }
       </button>
       <div class="pbody">
-        <button class="pname-button" type="button" onclick="openProductDetails(${p.id})">${p.name}</button>
-        <div class="price">${
-          p.promo_active&&p.promo_price!=null?('<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br><b>'+money(p.promo_price)+'</b>'):((p.price!==null&&p.price!==''&&p.price!==undefined)?money(p.price):(p.category==='Flores'||p.category==='Flores especiais'?'':'Preço a cadastrar'))
-        }</div>
+        <span class="product-category">${escapeProductText(p.category||'Produto artesanal')}</span>
+        <button class="pname-button" type="button" onclick="openProductDetails(${p.id})">${escapeProductText(p.name)}</button>
+        ${description?'<p class="product-description">'+escapeProductText(description)+'</p>':''}
+        <div class="price">${hasPromo?('<span class="old-price">'+money(p.price)+'</span> <span class="sale-tag">PROMOÇÃO</span><br><b>'+money(p.promo_price)+'</b>'):(hasPrice?money(p.price):(p.category==='Flores'||p.category==='Flores especiais'?'':'Preço a cadastrar'))}</div>
         ${p.available===false?'<div class="unavailable-label">Indisponível no momento</div>':`<button class="add" onclick="add(${p.id},this)">Adicionar ao carrinho</button>`}
       </div>
     </article>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function escapeProductText(value){return String(value??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/'/g,'&#39;');}
