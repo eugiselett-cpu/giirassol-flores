@@ -700,6 +700,16 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   </div>
   <img class="header-decor decor-right" id="decorHeaderRight" alt="" aria-hidden="true">
 </header>
+<section class="store-info" id="orderTracking" aria-label="Acompanhar pedido" style="margin:24px auto;padding:22px;max-width:900px;background:#fff;border:1px solid var(--line);border-radius:16px">
+  <h2 class="store-info-title">Acompanhe sua encomenda 🌻</h2>
+  <p class="small">Digite o código recebido pelo WhatsApp para consultar o andamento do seu pedido.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <input id="trackingCodeInput" class="field" style="flex:1;min-width:220px;margin:0" placeholder="Cole aqui seu código de acompanhamento" autocomplete="off" spellcheck="false">
+    <button type="button" class="btn" id="trackOrderButton" onclick="trackOrder()">Consultar pedido</button>
+  </div>
+  <div id="trackingResult" aria-live="polite" style="margin-top:14px"></div>
+</section>
+
 <div class="mobile-search" id="mobileSearch"><input id="mobileSearchInput" type="search" class="field" placeholder="Buscar produtos..." oninput="searchProducts(this.value)"></div>
 <div class="mobile-menu-shade" id="mobileMenuShade" onclick="toggleMobileMenu(false)"></div>
 <aside class="mobile-drawer" id="mobileDrawer" aria-label="Menu da loja">
@@ -743,15 +753,7 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
   </div>
 </section>
 
-<section class="store-info" id="orderTracking" aria-label="Acompanhar pedido" style="margin:24px auto;padding:22px;max-width:900px;background:#fff;border:1px solid var(--line);border-radius:16px">
-  <h2 class="store-info-title">Acompanhe sua encomenda 🌻</h2>
-  <p class="small">Digite o código recebido pelo WhatsApp para consultar o andamento do seu pedido.</p>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-    <input id="trackingCodeInput" class="field" style="flex:1;min-width:220px;margin:0" placeholder="Cole aqui seu código de acompanhamento" autocomplete="off" spellcheck="false">
-    <button type="button" class="btn" id="trackOrderButton" onclick="trackOrder()">Consultar pedido</button>
-  </div>
-  <div id="trackingResult" aria-live="polite" style="margin-top:14px"></div>
-</section>
+
 
 <button class="whatsapp-float" type="button" onclick="contactStore()" aria-label="Falar com a Giirassol Flores pelo WhatsApp">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-5.1A8.5 8.5 0 1 1 20.5 11.5Z"/><path d="M9 8.5c.6 2.7 2.2 4.3 5 5"/><path d="M8.8 8.2c-.4.7-.3 1.5.2 2.2 1 1.6 2.3 2.7 4.1 3.4.7.3 1.5.1 2-.5l.5-.7-2-1.2-.7.7c-.9-.4-1.5-1-1.9-1.8l.5-.7-1.2-2-.7.6Z"/></svg>
@@ -783,6 +785,8 @@ main.wrap{width:min(100% - 36px,1120px);max-width:1120px;margin:0 auto;padding:0
 
   <label>Seu nome</label>
   <input id="customer" class="field" placeholder="Como podemos chamar você?">
+  <label for="customerPhone">Seu WhatsApp (para avisos do pedido)</label>
+  <input id="customerPhone" class="field" type="tel" inputmode="tel" placeholder="(DDD) 9XXXX-XXXX" autocomplete="tel">
 
   <label for="deliveryMethod">Como deseja receber?</label>
   <select id="deliveryMethod" class="field" onchange="toggleDeliveryAddress(this.value)">
@@ -1242,7 +1246,7 @@ async function trackOrder(){
 }
 
 const trackingFromUrl=new URLSearchParams(location.search).get('acompanhar');
-if(trackingFromUrl){const trackingInput=document.getElementById('trackingCodeInput');if(trackingInput){trackingInput.value=trackingFromUrl;document.getElementById('orderTracking').scrollIntoView({behavior:'smooth'});trackOrder();}}
+if(trackingFromUrl){const trackingInput=document.getElementById('trackingCodeInput');if(trackingInput){trackingInput.value=trackingFromUrl;document.getElementById('orderTracking').scrollIntoView({behavior:'auto',block:'start'});trackOrder();}}
 
 async function confirmCheckout(){
   if(!window.gfCheckoutUrl||window.gfSavingOrder)return;
@@ -1261,6 +1265,7 @@ async function confirmCheckout(){
     const deliveryMethod=document.getElementById('deliveryMethod').value;
     const payload={
       customer_name:document.getElementById('customer').value.trim()||'Não informado',
+      customer_phone:document.getElementById('customerPhone').value.trim()||null,
       items:orderItems,partial_total:total,
       notes:document.getElementById('notes').value.trim()||null,
       color_preference:cartColorPreference,
@@ -1274,7 +1279,7 @@ async function confirmCheckout(){
     const {error}=await db.from('orders').insert(payload);
     if(error)throw error;
     const checkoutUrl=new URL(window.gfCheckoutUrl);
-    const checkoutMessage=(checkoutUrl.searchParams.get('text')||'')+'\n\n🔎 *Código de acompanhamento:* '+trackingCode+'\nAcompanhe seu pedido em: https://eugiselett-cpu.github.io/giirassol-flores/?acompanhar='+trackingCode;
+    const checkoutMessage=checkoutUrl.searchParams.get('text')||'';
     checkoutUrl.searchParams.set('text',checkoutMessage);
     if(whatsappWindow&&!whatsappWindow.closed){whatsappWindow.location.href=checkoutUrl.toString();}
     else{window.location.href=checkoutUrl.toString();}
